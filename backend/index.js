@@ -8,7 +8,7 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/', (req, res) => {
     res.json({
         message: `Servidor funcionando en el puerto ${PORT}`
-    })
+    });
 });
 
 app.listen(PORT, () => {

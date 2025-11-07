@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication and profile management
+model User {
+  id         Int      @id @default(autoincrement()) @map("USERS_ID")
+  username   String   @unique @db.VarChar(20)
+  realName   String   @map("Real_name") @db.VarChar(50)
+  password   String   @db.VarChar(255)
+  role       String   @default("user") @db.VarChar(20)
+  profileImg String?  @map("Profile_IMG") @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  chats Chat[]
+
+  @@index([username])
+  @@index([realName])
+  @@map("USERS")
+}
+
+// Chat model for conversation history
+model Chat {
+  id        Int      @id @default(autoincrement()) @map("CHAT_ID")
+  title     String   @map("TITLE_CHAT") @db.VarChar(50)
+  userId    Int      @map("USERS_ID")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([userId])
+  @@index([title])
+  @@index([updatedAt])
+  @@map("CHATS")
+}
+
+// Message model for chat messages
+model Message {
+  id        Int      @id @default(autoincrement()) @map("MESSAGE_ID")
+  chatId    Int      @map("CHAT_ID")
+  role      String   @db.VarChar(20) // "user" or "assistant"
+  content   String   @map("MESSAGES_CONTENT") @db.Text
+  createdAt DateTime @default(now())
+
+  // Relations
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([chatId])
+  @@index([createdAt])
+  @@map("MESSAGES")
+}

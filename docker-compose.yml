@@ -9,14 +9,13 @@ services:
     container_name: postgres_db
     restart: always
     environment:
-      POSTGRES_USER: studentWeb
+      POSTGRES_USER: webdev
       POSTGRES_PASSWORD: InsecurePasswd
       POSTGRES_DB: netrunner
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 #########################################
 #Le pongo su respectiva terminal grafica
 ########################################
