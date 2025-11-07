@@ -107,8 +107,122 @@ const register = async (req, res) => {
 //////////////////////////////////
 // LOGIN DE USUARIOS
 //////////////////////////////////
+const login = async (req, res) => {
+  try {
+    // 1. Extraemos username y password del body
+    const { username, password } = req.body;
 
+    // 2. Validamos que ambos campos estén presentes
+    if (!username || !password) {
+      return res.status(400).json({
+        error: 'Username y password son requeridos'
+      });
+    }
+
+    // 3. Buscamos el usuario en la base de datos por username
+    const user = await prisma.user.findUnique({
+      where: { username }
+    });
+
+    // 4. Si no existe el usuario, devolvemos error genérico
+    // SEGURIDAD: NO revelamos si el username existe o no (info útil para enumerar usuarios)
+    // Usamos el mismo mensaje para ambos casos (user no existe o password incorrecta)
+    if (!user) {
+      return res.status(404).json({
+        error: 'Recurso no encontrado.'
+      });
+    }
+
+    // 5. Comparamos la contraseña proporcionada con el hash guardado
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    // 6. Si la contraseña no coincide, devolvemos el MISMO error que arriba
+    // SEGURIDAD: Timing attack protection - siempre tardamos lo mismo
+    if (!isPasswordValid) {
+      return res.status(404).json({
+        error: 'Recurso no encontrado.'
+      });
+    }
+
+    // 7. Generamos un token JWT con los datos del usuario
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        username: user.username,
+        role: user.role
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    );
+
+    // 8. Devolvemos el token y los datos del usuario (sin la contraseña)
+    res.status(200).json({
+      message: 'Login exitoso',
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        realName: user.realName,
+        role: user.role,
+        profileImg: user.profileImg
+      }
+    });
+
+  } catch (error) {
+    console.error('Error en login:', error);
+    res.status(500).json({
+      error: 'Error al iniciar sesión',
+      details: error.message
+    });
+  }
+};
+
+//////////////////////////////////
+// Funcion Identificacion USRS
+//////////////////////////////////
+const getProfile = async (req, res) => {
+  try {
+    // req.user viene del middleware verifyToken
+    const userId = req.user.userId;
+
+    // Buscamos el usuario en la base de datos
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        realName: true,
+        role: true,
+        profileImg: true,
+        createdAt: true,
+        updatedAt: true
+        // NO incluimos password por seguridad
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'Usuario no encontrado'
+      });
+    }
+
+    res.status(200).json({
+      user
+    });
+
+  } catch (error) {
+    console.error('Error al obtener perfil:', error);
+    res.status(500).json({
+      error: 'Error al obtener perfil',
+      details: error.message
+    });
+  }
+};
 
 //exportamos todo esto
-module.exports = { register };
+module.exports = { 
+    register,
+    login,
+    getProfile
+ };
 

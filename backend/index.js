@@ -12,7 +12,7 @@ app.get('/', (req, res) => {
     });
 });
 
-// Rutas de autenticación
+// Rutas de autenticación para usarlas 
 app.use('/api/auth', AuthRoutes);
 
 app.listen(PORT, () => {
