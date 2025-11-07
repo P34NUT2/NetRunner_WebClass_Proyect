@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
+const AuthRoutes = require('./routes/authRouts');
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -11,6 +12,10 @@ app.get('/', (req, res) => {
     });
 });
 
+// Rutas de autenticación
+app.use('/api/auth', AuthRoutes);
+
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
+
