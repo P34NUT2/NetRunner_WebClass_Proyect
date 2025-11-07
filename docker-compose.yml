@@ -1,0 +1,39 @@
+version: '3.8'
+
+#########################################
+#Postgresito como DB
+########################################
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: studentWeb
+      POSTGRES_PASSWORD: InsecurePasswd
+      POSTGRES_DB: netrunner
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+#########################################
+#Le pongo su respectiva terminal grafica
+########################################
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@dev.com
+      PGADMIN_DEFAULT_PASSWORD: InsecurePasswd
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    volumes: 
+      - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  postgres_data:
+  pgadmin_data:
