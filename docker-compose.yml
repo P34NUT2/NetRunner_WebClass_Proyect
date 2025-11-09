@@ -1,8 +1,6 @@
-version: '3.8'
-
 #########################################
-#Postgresito como DB
-########################################
+# Postgresito como DB
+#########################################
 services:
   postgres:
     image: postgres:15
@@ -16,9 +14,14 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - netrunner_network
+
 #########################################
-#Le pongo su respectiva terminal grafica
-########################################
+# Terminal gráfica para PostgreSQL
+#########################################
+  ##se que este no lo ocupa usted pero me sirve para meter datos 
+  ##y manejarlos desde ahi igual se lo dejo por si quiere usar este docker
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
@@ -30,9 +33,68 @@ services:
       - "8080:80"
     depends_on:
       - postgres
-    volumes: 
+    volumes:
       - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - netrunner_network
 
+########################################################
+# Ollama para IA (llama3.2)
+########################################################
+  ollama:
+    image: ollama/ollama:latest
+    container_name: netrunner_ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      # Guardar modelos descargados (2-10GB)
+      - ollama_data:/root/.ollama
+      # Montar el Modelfile para crear modelo personalizado
+      - ./netrunner-model:/netrunner-model:ro
+    networks:
+      - netrunner_network
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+########################################################
+# Script para descargar llama3.2 automáticamente
+# NOTA: Solo descarga si el modelo NO existe (verifica primero)
+# El modelo se guarda en ollama_data (persistente entre reinicios)
+########################################################
+  ollama-pull:
+    image: docker:cli
+    container_name: ollama_model_puller
+    depends_on:
+      ollama:
+        condition: service_healthy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: /bin/sh
+    command: >
+      -c "
+      echo '🚀 Verificando modelo llama3.2...';
+      docker exec netrunner_ollama ollama pull llama3.2;
+      echo '✅ Modelo listo para usar!';
+      "
+    restart: "no"
+
+#########################################
+# Redes
+#########################################
+networks:
+  netrunner_network:
+    driver: bridge
+
+#########################################
+# Volúmenes
+#########################################
 volumes:
   postgres_data:
   pgadmin_data:
+  ollama_data:
