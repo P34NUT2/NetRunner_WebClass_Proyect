@@ -41,6 +41,7 @@ services:
 ########################################################
 # Ollama para IA (llama3.2)
 ########################################################
+##lo deje con los puertos default que venian en la documentacion
   ollama:
     image: ollama/ollama:latest
     container_name: netrunner_ollama
@@ -76,10 +77,12 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     entrypoint: /bin/sh
+    ####por lo que lei al hacer el pull es algo inteligente verifica si exixte si no 
+    ##lo descarga si existe solo lo incia sin descargarlo dos veces
     command: >
       -c "
       echo '🚀 Verificando modelo llama3.2...';
-      docker exec netrunner_ollama ollama pull llama3.2;
+      docker exec netrunner_ollama ollama pull llama3.2; 
       echo '✅ Modelo listo para usar!';
       "
     restart: "no"

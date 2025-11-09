@@ -1027,6 +1027,9 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$context$2f$AuthContext$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/context/AuthContext.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$context$2f$ChatContext$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/context/ChatContext.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/navigation.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$Header$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/Header.tsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$MessagesBox$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/MessagesBox.tsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$InputArea$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/InputArea.tsx [app-ssr] (ecmascript)");
@@ -1038,76 +1041,91 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$Sidebar$2e$tsx
 ;
 ;
 ;
+;
+;
+;
 function Home() {
-    // ==================== ESTADO (STATE) ====================
-    // El ESTADO vive en el componente PADRE porque:
-    // 1. Varios componentes hijos necesitan acceder a los mismos datos
-    // 2. El padre es quien coordina la comunicación entre hermanos
-    // Estado 1: Almacena todos los mensajes del chat
-    const [messages, setMessages] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
-    // Estado 2: Indica si el bot está escribiendo
-    const [isTyping, setIsTyping] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
-    // Estado 3: Controla si el sidebar está abierto o cerrado
+    const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRouter"])();
+    const { isLoggedIn } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$context$2f$AuthContext$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAuth"])();
+    const { chats, currentChatId, messages, loading, loadChats, createChat, loadMessages, sendMessage } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$context$2f$ChatContext$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useChat"])();
+    // Estado 2: Controla si el sidebar está abierto o cerrado
     const [sidebarOpen, setSidebarOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
-    // ==================== DATOS ESTÁTICOS ====================
-    // Respuestas predefinidas del bot (simulación)
-    const botResponses = [
-        "Interesante perspectiva sobre ese tema...",
-        "Entiendo tu punto de vista perfectamente.",
-        "¿Podrías contarme más detalles sobre eso?",
-        "Es una buena pregunta, déjame pensar...",
-        "Fascinante. Nunca lo había visto desde ese ángulo.",
-        "Eso me recuerda a algo que leí recientemente...",
-        "¡Qué curioso! Es un tema muy complejo.",
-        "Me parece una observación muy acertada.",
-        "Entiendo. ¿Y cómo te sientes al respecto?",
-        "Es un punto muy válido el que mencionas."
-    ];
-    // ==================== FUNCIONES AUXILIARES ====================
-    // Función para obtener una respuesta aleatoria del bot
-    const getRandomBotResponse = ()=>{
-        const randomIndex = Math.floor(Math.random() * botResponses.length);
-        return botResponses[randomIndex];
-    };
-    // Función para agregar un mensaje al array de mensajes
-    const addMessage = (text, sender)=>{
-        console.log("Mensaje agregado en Home:", text, "de:", sender);
-        // setMessages actualiza el estado agregando el nuevo mensaje
-        setMessages((prevMessages)=>[
-                ...prevMessages,
-                {
-                    text,
-                    sender
+    // ==================== INICIALIZACIÓN ====================
+    // Al cargar la página, cargar chats o crear uno por defecto
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        const initializeChat = async ()=>{
+            if (!isLoggedIn) {
+                router.push('/login');
+                return;
+            }
+            try {
+                // Cargar chats existentes
+                await loadChats();
+            } catch (error) {
+                console.error('Error al cargar chats:', error);
+            }
+        };
+        initializeChat();
+    }, [
+        isLoggedIn
+    ]);
+    // Si no hay chat seleccionado pero hay chats disponibles, seleccionar el primero
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        const selectDefaultChat = async ()=>{
+            if (chats.length > 0 && !currentChatId) {
+                await loadMessages(chats[0].id);
+            } else if (chats.length === 0 && isLoggedIn && !loading) {
+                // Si no hay chats, crear uno por defecto
+                try {
+                    await createChat('Chat Principal');
+                } catch (error) {
+                    console.error('Error al crear chat:', error);
                 }
-            ]);
-    };
+            }
+        };
+        selectDefaultChat();
+    }, [
+        chats,
+        currentChatId,
+        isLoggedIn
+    ]);
+    // Convertir mensajes del ChatContext al formato que espera MessageBox
+    const formattedMessages = messages.map((msg)=>({
+            text: msg.content,
+            sender: msg.role === 'user' ? 'user' : 'bot'
+        }));
     // ==================== FUNCIÓN CALLBACK ====================
     /**
-   * handleSendMessage - Esta es una función CALLBACK
+   * handleSendMessage - CONECTADO A OLLAMA
    *
-   * ¿Qué es un callback?
-   * - Es una función que se pasa de PADRE a HIJO como prop
-   * - Permite que el HIJO le "avise" al PADRE cuando algo sucede
-   * - El HIJO ejecuta esta función, pero la lógica vive en el PADRE
+   * ANTES: Usaba respuestas fake (botResponses)
+   * AHORA: Envía el mensaje a Ollama (llama3.2) vía backend
    *
    * Flujo:
    * 1. Usuario escribe en InputArea (HIJO)
-   * 2. InputArea llama a handleSendMessage (función del PADRE)
-   * 3. El PADRE actualiza el estado (messages)
-   * 4. El cambio en el estado hace que MessageBox (HIJO) se actualice automáticamente
-   */ const handleSendMessage = (text)=>{
-        // Agregar mensaje del usuario
-        addMessage(text, 'user');
-        // Activar indicador de typing
-        setIsTyping(true);
-        // Simular respuesta del bot después de un delay
-        setTimeout(()=>{
-            setIsTyping(false); // Desactivar indicador
-            const botResponse = getRandomBotResponse();
-            addMessage(botResponse, 'bot');
-        }, 1000 + Math.random() * 1500); // Entre 1 y 2.5 segundos
+   * 2. InputArea llama a handleSendMessage
+   * 3. Se envía a ChatContext.sendMessage()
+   * 4. ChatContext hace fetch al backend
+   * 5. Backend envía a Ollama
+   * 6. Ollama responde con llama3.2
+   * 7. Se actualiza automáticamente en MessageBox
+   */ const handleSendMessage = async (text)=>{
+        if (!currentChatId) {
+            console.error('No hay chat seleccionado');
+            return;
+        }
+        try {
+            // Enviar mensaje a Ollama (backend hace el trabajo)
+            await sendMessage(currentChatId, text);
+        } catch (error) {
+            console.error('Error al enviar mensaje:', error);
+        }
     };
     // ==================== RENDERIZADO ====================
+    // Si no está autenticado, no mostrar nada (se redirige a login)
+    if (!isLoggedIn) {
+        return null;
+    }
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "bg-black text-gray-100 min-h-screen flex flex-col",
         children: [
@@ -1116,29 +1134,29 @@ function Home() {
                 onClose: ()=>setSidebarOpen(false)
             }, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 140,
+                lineNumber: 165,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$Header$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
                 onOpenSidebar: ()=>setSidebarOpen(true)
             }, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 146,
+                lineNumber: 171,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
                 className: "flex-1 container mx-auto px-4 py-6 max-w-4xl pt-24",
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$MessagesBox$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
-                    messages: messages,
-                    isTyping: isTyping
+                    messages: formattedMessages,
+                    isTyping: loading
                 }, void 0, false, {
                     fileName: "[project]/app/page.tsx",
-                    lineNumber: 162,
+                    lineNumber: 182,
                     columnNumber: 13
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 148,
+                lineNumber: 173,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1147,26 +1165,26 @@ function Home() {
                     className: "container mx-auto px-4 py-4 max-w-4xl",
                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$InputArea$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
                         onSendMessage: handleSendMessage,
-                        isTyping: isTyping
+                        isTyping: loading
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 186,
+                        lineNumber: 203,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/app/page.tsx",
-                    lineNumber: 167,
+                    lineNumber: 187,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 166,
+                lineNumber: 186,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/page.tsx",
-        lineNumber: 138,
+        lineNumber: 163,
         columnNumber: 5
     }, this);
 }

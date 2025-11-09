@@ -5,6 +5,7 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 const AuthRoutes = require('./routes/authRouts');
+const ChatRoutes = require('./routes/chatRoutes');
 
 // ===== CONFIGURACIÓN DE CORS =====
 // Permitir peticiones desde el frontend
@@ -26,9 +27,23 @@ app.get('/', (req, res) => {
     res.json({
         message: `Servidor funcionando en el puerto ${PORT}`,
         endpoints: {
-          register: 'POST /api/auth/register',
-          login: 'POST /api/auth/login',
-          profile: 'GET /api/auth/profile (requiere JWT)'
+          auth: {
+            register: 'POST /api/auth/register',
+            login: 'POST /api/auth/login',
+            profile: 'GET /api/auth/profile (requiere JWT)'
+          },
+          chat: {
+            getChats: 'GET /api/chat (requiere JWT)',
+            createChat: 'POST /api/chat (requiere JWT)',
+            getMessages: 'GET /api/chat/:chatId/messages (requiere JWT)',
+            sendMessage: 'POST /api/chat/:chatId/messages (requiere JWT)',
+            deleteChat: 'DELETE /api/chat/:chatId (requiere JWT)'
+          }
+        },
+        services: {
+          database: 'PostgreSQL',
+          ai: 'Ollama (llama3.2)',
+          ollama_host: process.env.OLLAMA_HOST
         },
         security: {
           cors: 'enabled',
@@ -39,6 +54,9 @@ app.get('/', (req, res) => {
 
 // Rutas de autenticación
 app.use('/api/auth', AuthRoutes);
+
+// Rutas de chat (requieren JWT)
+app.use('/api/chat', ChatRoutes);
 
 // ===== MANEJO DE ERRORES =====
 app.use((err, req, res, next) => {
