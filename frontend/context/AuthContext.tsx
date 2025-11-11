@@ -22,6 +22,7 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, realName: string, password: string) => Promise<void>;
   logout: () => void;
+  setUser: (user: User) => void;
 }
 
 // ===== CONTEXTO =====
@@ -118,6 +119,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   };
 
+  // ===== FUNCIÓN ACTUALIZAR USUARIO =====
+  const updateUser = (updatedUser: User) => {
+    // Actualizar en localStorage
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    // Actualizar en estado
+    setUser(updatedUser);
+  };
+
   const value = {
     user,
     isLoggedIn: user !== null,
@@ -125,6 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     register,
     logout,
+    setUser: updateUser,
   };
 
   return (

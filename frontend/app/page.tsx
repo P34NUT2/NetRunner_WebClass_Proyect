@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useChat } from '@/context/ChatContext';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Header from '@/components/Header';
 import MessageBox from '@/components/MessagesBox';
 import InputArea from '@/components/InputArea';
@@ -88,19 +89,12 @@ export default function Home() {
   const [chatsLoaded, setChatsLoaded] = useState<boolean>(false);
 
   // ==================== VERIFICAR AUTENTICACIÓN ====================
-  useEffect(() => {
-    // Solo redirigir si ya terminó de cargar y NO está logueado
-    if (!authLoading && !isLoggedIn) {
-      // Resetear estado cuando hace logout
-      setChatsLoaded(false);
-      router.push('/login');
-    }
-  }, [isLoggedIn, authLoading, router]);
+  // Ya no redirigimos automáticamente al login - permitimos modo invitado
 
   // ==================== CARGAR CHATS AL INICIAR ====================
   useEffect(() => {
     const initChats = async () => {
-      if (!isLoggedIn || chatsLoaded) return;
+      if (chatsLoaded || authLoading) return;
 
       try {
         await loadChats();
@@ -111,12 +105,12 @@ export default function Home() {
     };
 
     initChats();
-  }, [isLoggedIn, chatsLoaded]);
+  }, [chatsLoaded, authLoading]);
 
   // ==================== GESTIONAR CHAT ACTIVO ====================
   useEffect(() => {
     const manageActiveChat = async () => {
-      if (!chatsLoaded || !isLoggedIn || loading) return;
+      if (!chatsLoaded || loading || authLoading) return;
 
       // Si hay un chat guardado en currentChatId, cargar sus mensajes (solo si no tiene mensajes cargados)
       if (currentChatId && chats.length > 0 && messages.length === 0) {
@@ -141,7 +135,7 @@ export default function Home() {
 
     manageActiveChat();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatsLoaded, isLoggedIn]);
+  }, [chatsLoaded]);
 
   // Convertir mensajes del ChatContext al formato que espera MessageBox
   const formattedMessages = messages.map(msg => ({
@@ -192,11 +186,6 @@ export default function Home() {
     );
   }
 
-  // Si no está autenticado, no mostrar nada (se redirige a login)
-  if (!isLoggedIn) {
-    return null;
-  }
-
   return (
     <div className="bg-black text-gray-100 min-h-screen flex flex-col">
         {/* ========== COMPONENTE HIJO: Sidebar ========== */}
@@ -213,6 +202,15 @@ export default function Home() {
           onOpenSidebar={() => setSidebarOpen(true)}
           onOpenSettings={() => setInfoModalOpen(true)}
         />
+
+        {/* ========== AVISO MODO INVITADO ========== */}
+        {!isLoggedIn && (
+          <div className="bg-yellow-500/10 border-b border-yellow-500/30 px-4 py-2 text-center mt-16">
+            <p className="text-yellow-500 text-sm">
+              ⚠️ <strong>Modo Invitado</strong> - Tus chats solo se guardan localmente. <Link href="/register" className="underline hover:text-yellow-400">Crea una cuenta</Link> para guardar tus conversaciones permanentemente.
+            </p>
+          </div>
+        )}
 
         <main className="flex-1 container mx-auto px-4 py-6 max-w-4xl pt-24">
             {/* ========== COMPONENTE HIJO 2: MessageBox ========== */}

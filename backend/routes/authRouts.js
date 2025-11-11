@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { register, login, getProfile } = require('../controllers/Auth_And_Registration');
+const { register, login, getProfile, updateProfile } = require('../controllers/Auth_And_Registration');
 const verifyToken = require('../middlewares/verifyToken');
 
 // Rutas públicas (no requieren autenticación)
@@ -11,5 +11,6 @@ router.post('/login', login);
 
 // Rutas protegidas (requieren autenticación con JWT)
 router.get('/profile', verifyToken, getProfile);
+router.put('/profile', verifyToken, updateProfile);
 
 module.exports = router;
