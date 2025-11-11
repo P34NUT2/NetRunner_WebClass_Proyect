@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useChat } from '@/context/ChatContext';
 import { useRouter } from 'next/navigation';
@@ -73,49 +73,53 @@ export default function Home() {
     loadChats,
     createChat,
     loadMessages,
-    sendMessage
+    sendMessage,
+    resetChat
   } = useChat();
 
   // Estado 2: Controla si el sidebar está abierto o cerrado
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
-  // ==================== INICIALIZACIÓN ====================
-  // Al cargar la página, cargar chats o crear uno por defecto
+  // Ref para saber si es la primera carga o si acabamos de iniciar sesión
+  const prevLoggedIn = useRef<boolean>(false);
+
+  // ==================== DETECTAR LOGIN/LOGOUT ====================
   useEffect(() => {
-    const initializeChat = async () => {
+    const handleAuthChange = async () => {
+      // Caso 1: Usuario acaba de hacer LOGOUT (true -> false)
+      if (prevLoggedIn.current && !isLoggedIn) {
+        console.log('🔴 Logout detectado - Limpiando chats');
+        resetChat();
+        router.push('/login');
+        prevLoggedIn.current = false;
+        return;
+      }
+
+      // Caso 2: Usuario acaba de hacer LOGIN (false -> true)
+      if (!prevLoggedIn.current && isLoggedIn) {
+        console.log('🟢 Login detectado - Creando nuevo chat');
+        try {
+          // Crear un nuevo chat automáticamente
+          await createChat('Nueva Conversación');
+        } catch (error) {
+          console.error('Error al crear chat inicial:', error);
+        }
+        prevLoggedIn.current = true;
+        return;
+      }
+
+      // Caso 3: No está logueado (redirigir)
       if (!isLoggedIn) {
         router.push('/login');
         return;
       }
 
-      try {
-        // Cargar chats existentes
-        await loadChats();
-      } catch (error) {
-        console.error('Error al cargar chats:', error);
-      }
+      // Actualizar ref
+      prevLoggedIn.current = isLoggedIn;
     };
 
-    initializeChat();
+    handleAuthChange();
   }, [isLoggedIn]);
-
-  // Si no hay chat seleccionado pero hay chats disponibles, seleccionar el primero
-  useEffect(() => {
-    const selectDefaultChat = async () => {
-      if (chats.length > 0 && !currentChatId) {
-        await loadMessages(chats[0].id);
-      } else if (chats.length === 0 && isLoggedIn && !loading) {
-        // Si no hay chats, crear uno por defecto
-        try {
-          await createChat('Chat Principal');
-        } catch (error) {
-          console.error('Error al crear chat:', error);
-        }
-      }
-    };
-
-    selectDefaultChat();
-  }, [chats, currentChatId, isLoggedIn]);
 
   // Convertir mensajes del ChatContext al formato que espera MessageBox
   const formattedMessages = messages.map(msg => ({

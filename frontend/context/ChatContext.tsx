@@ -36,6 +36,7 @@ interface ChatContextType {
   sendMessage: (chatId: number, content: string) => Promise<void>;
   deleteChat: (chatId: number) => Promise<void>;
   setCurrentChatId: (chatId: number | null) => void;
+  resetChat: () => void;
 }
 
 // ===== CONTEXTO =====
@@ -139,9 +140,23 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ===== ENVIAR MENSAJE Y RECIBIR RESPUESTA DE OLLAMA =====
   const sendMessage = async (chatId: number, content: string) => {
+    // Crear mensaje temporal del usuario para mostrar inmediatamente
+    const tempUserMessage: Message = {
+      id: Date.now(), // ID temporal
+      chatId,
+      role: 'user',
+      content,
+      createdAt: new Date().toISOString()
+    };
+
     try {
+      // 1. Mostrar el mensaje del usuario INMEDIATAMENTE
+      setMessages(prev => [...prev, tempUserMessage]);
+
+      // 2. Activar loading para la respuesta de la IA
       setLoading(true);
 
+      // 3. Enviar al backend y esperar respuesta de Ollama
       const response = await fetch(`${API_URL}/api/chat/${chatId}/messages`, {
         method: 'POST',
         headers: getHeaders(),
@@ -155,15 +170,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const data = await response.json();
 
-      // Agregar ambos mensajes (usuario + asistente) a la lista
+      // 4. Agregar SOLO el mensaje del asistente (el del usuario ya está)
       setMessages(prev => [
         ...prev,
-        data.userMessage,
         data.assistantMessage
       ]);
 
     } catch (error: any) {
       console.error('Error enviando mensaje:', error);
+      // Si hay error, remover el mensaje temporal del usuario
+      setMessages(prev => prev.filter(msg => msg.id !== tempUserMessage.id));
       throw error;
     } finally {
       setLoading(false);
@@ -201,6 +217,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // ===== RESETEAR CHAT (Para logout) =====
+  const resetChat = () => {
+    setChats([]);
+    setCurrentChatId(null);
+    setMessages([]);
+    setLoading(false);
+  };
+
   const value = {
     chats,
     currentChatId,
@@ -211,7 +235,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loadMessages,
     sendMessage,
     deleteChat,
-    setCurrentChatId
+    setCurrentChatId,
+    resetChat
   };
 
   return (

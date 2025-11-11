@@ -1079,54 +1079,48 @@ function Home() {
     _s();
     const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"])();
     const { isLoggedIn } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$context$2f$AuthContext$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"])();
-    const { chats, currentChatId, messages, loading, loadChats, createChat, loadMessages, sendMessage } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$context$2f$ChatContext$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useChat"])();
+    const { chats, currentChatId, messages, loading, loadChats, createChat, loadMessages, sendMessage, resetChat } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$context$2f$ChatContext$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useChat"])();
     // Estado 2: Controla si el sidebar está abierto o cerrado
     const [sidebarOpen, setSidebarOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
-    // ==================== INICIALIZACIÓN ====================
-    // Al cargar la página, cargar chats o crear uno por defecto
+    // Ref para saber si es la primera carga o si acabamos de iniciar sesión
+    const prevLoggedIn = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(false);
+    // ==================== DETECTAR LOGIN/LOGOUT ====================
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "Home.useEffect": ()=>{
-            const initializeChat = {
-                "Home.useEffect.initializeChat": async ()=>{
+            const handleAuthChange = {
+                "Home.useEffect.handleAuthChange": async ()=>{
+                    // Caso 1: Usuario acaba de hacer LOGOUT (true -> false)
+                    if (prevLoggedIn.current && !isLoggedIn) {
+                        console.log('🔴 Logout detectado - Limpiando chats');
+                        resetChat();
+                        router.push('/login');
+                        prevLoggedIn.current = false;
+                        return;
+                    }
+                    // Caso 2: Usuario acaba de hacer LOGIN (false -> true)
+                    if (!prevLoggedIn.current && isLoggedIn) {
+                        console.log('🟢 Login detectado - Creando nuevo chat');
+                        try {
+                            // Crear un nuevo chat automáticamente
+                            await createChat('Nueva Conversación');
+                        } catch (error) {
+                            console.error('Error al crear chat inicial:', error);
+                        }
+                        prevLoggedIn.current = true;
+                        return;
+                    }
+                    // Caso 3: No está logueado (redirigir)
                     if (!isLoggedIn) {
                         router.push('/login');
                         return;
                     }
-                    try {
-                        // Cargar chats existentes
-                        await loadChats();
-                    } catch (error) {
-                        console.error('Error al cargar chats:', error);
-                    }
+                    // Actualizar ref
+                    prevLoggedIn.current = isLoggedIn;
                 }
-            }["Home.useEffect.initializeChat"];
-            initializeChat();
+            }["Home.useEffect.handleAuthChange"];
+            handleAuthChange();
         }
     }["Home.useEffect"], [
-        isLoggedIn
-    ]);
-    // Si no hay chat seleccionado pero hay chats disponibles, seleccionar el primero
-    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
-        "Home.useEffect": ()=>{
-            const selectDefaultChat = {
-                "Home.useEffect.selectDefaultChat": async ()=>{
-                    if (chats.length > 0 && !currentChatId) {
-                        await loadMessages(chats[0].id);
-                    } else if (chats.length === 0 && isLoggedIn && !loading) {
-                        // Si no hay chats, crear uno por defecto
-                        try {
-                            await createChat('Chat Principal');
-                        } catch (error) {
-                            console.error('Error al crear chat:', error);
-                        }
-                    }
-                }
-            }["Home.useEffect.selectDefaultChat"];
-            selectDefaultChat();
-        }
-    }["Home.useEffect"], [
-        chats,
-        currentChatId,
         isLoggedIn
     ]);
     // Convertir mensajes del ChatContext al formato que espera MessageBox
@@ -1174,14 +1168,14 @@ function Home() {
                 onClose: ()=>setSidebarOpen(false)
             }, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 165,
+                lineNumber: 169,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$Header$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                 onOpenSidebar: ()=>setSidebarOpen(true)
             }, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 171,
+                lineNumber: 175,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -1191,12 +1185,12 @@ function Home() {
                     isTyping: loading
                 }, void 0, false, {
                     fileName: "[project]/app/page.tsx",
-                    lineNumber: 182,
+                    lineNumber: 186,
                     columnNumber: 13
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 173,
+                lineNumber: 177,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1208,27 +1202,27 @@ function Home() {
                         isTyping: loading
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 203,
+                        lineNumber: 207,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/app/page.tsx",
-                    lineNumber: 187,
+                    lineNumber: 191,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 186,
+                lineNumber: 190,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/page.tsx",
-        lineNumber: 163,
+        lineNumber: 167,
         columnNumber: 5
     }, this);
 }
-_s(Home, "XBVsdaF3axTLr7C2UZHEmx3Z+KU=", false, function() {
+_s(Home, "Q1R2jG62BALWXZygqtDGhGO1Vrw=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"],
         __TURBOPACK__imported__module__$5b$project$5d2f$context$2f$AuthContext$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"],
