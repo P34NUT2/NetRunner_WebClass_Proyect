@@ -167,15 +167,38 @@ const sendMessage = async (req, res) => {
       }
     });
 
-    // Actualizar el timestamp del chat
-    await prisma.chat.update({
-      where: { id: chatId },
-      data: { updatedAt: new Date() }
+    // Verificar si es el primer mensaje del chat y actualizar el título
+    const messageCount = await prisma.message.count({
+      where: { chatId }
     });
+
+    let updatedChat;
+    if (messageCount === 2) {
+      // Es el primer intercambio (1 user + 1 assistant = 2 mensajes)
+      // Actualizar título del chat con el primer mensaje del usuario (truncado)
+      const newTitle = content.length > 50
+        ? content.substring(0, 50) + '...'
+        : content;
+
+      updatedChat = await prisma.chat.update({
+        where: { id: chatId },
+        data: {
+          title: newTitle,
+          updatedAt: new Date()
+        }
+      });
+    } else {
+      // Solo actualizar timestamp
+      updatedChat = await prisma.chat.update({
+        where: { id: chatId },
+        data: { updatedAt: new Date() }
+      });
+    }
 
     res.status(200).json({
       userMessage,
-      assistantMessage
+      assistantMessage,
+      chat: updatedChat  // Devolver el chat actualizado
     });
 
   } catch (error) {

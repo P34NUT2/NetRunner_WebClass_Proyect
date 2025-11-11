@@ -102,6 +102,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Agregar a la lista
       setChats(prev => [newChat, ...prev]);
+
+      // Limpiar mensajes y establecer como chat actual
+      setMessages([]);
       setCurrentChatId(newChat.id);
 
       return newChat;
@@ -176,6 +179,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         data.assistantMessage
       ]);
 
+      // 5. Actualizar el chat en la lista (título puede haber cambiado)
+      if (data.chat) {
+        setChats(prev => prev.map(chat =>
+          chat.id === data.chat.id ? data.chat : chat
+        ));
+      }
+
     } catch (error: any) {
       console.error('Error enviando mensaje:', error);
       // Si hay error, remover el mensaje temporal del usuario
@@ -188,6 +198,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ===== ELIMINAR CHAT =====
   const deleteChat = async (chatId: number) => {
+    const wasCurrentChat = currentChatId === chatId;
+
     try {
       setLoading(true);
       const response = await fetch(`${API_URL}/api/chat/${chatId}`, {
@@ -201,12 +213,21 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Remover de la lista
-      setChats(prev => prev.filter(chat => chat.id !== chatId));
+      const updatedChats = chats.filter(chat => chat.id !== chatId);
+      setChats(updatedChats);
 
-      // Si es el chat actual, limpiar
-      if (currentChatId === chatId) {
-        setCurrentChatId(null);
+      // Si es el chat actual, cargar otro o crear uno nuevo
+      if (wasCurrentChat) {
         setMessages([]);
+
+        if (updatedChats.length > 0) {
+          // Cargar el primer chat disponible
+          await loadMessages(updatedChats[0].id);
+        } else {
+          // No hay más chats, crear uno nuevo
+          setCurrentChatId(null);
+          await createChat('Nueva Conversación');
+        }
       }
 
     } catch (error: any) {

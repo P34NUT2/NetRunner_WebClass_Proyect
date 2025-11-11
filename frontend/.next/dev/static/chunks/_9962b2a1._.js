@@ -724,6 +724,7 @@ __turbopack_context__.s([
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/react-icons/fa/index.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$context$2f$AuthContext$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/context/AuthContext.tsx [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$context$2f$ChatContext$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/context/ChatContext.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/navigation.js [app-client] (ecmascript)");
 ;
 var _s = __turbopack_context__.k.signature();
@@ -731,37 +732,64 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 ;
+;
 const Sidebar = ({ isOpen, onClose })=>{
     _s();
     const { isLoggedIn } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$context$2f$AuthContext$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"])();
     const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"])();
-    // Historial de chats de ejemplo (después lo conectarás con el backend)
-    const chats = [
-        {
-            id: 1,
-            title: 'Análisis de malware',
-            lastMessage: 'Hace 2 horas',
-            unread: 0
-        },
-        {
-            id: 2,
-            title: 'Exploits de Linux',
-            lastMessage: 'Ayer',
-            unread: 2
-        },
-        {
-            id: 3,
-            title: 'Buffer overflow en C',
-            lastMessage: 'Hace 3 días',
-            unread: 0
-        },
-        {
-            id: 4,
-            title: 'SQL Injection basics',
-            lastMessage: 'Hace 1 semana',
-            unread: 0
+    const { chats, currentChatId, createChat, loadMessages, deleteChat, loading } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$context$2f$ChatContext$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useChat"])();
+    // Función para crear un nuevo chat
+    const handleCreateNewChat = async ()=>{
+        try {
+            const newChat = await createChat('Nueva Conversación');
+            console.log('✅ Nuevo chat creado:', newChat.title);
+            onClose(); // Cerrar sidebar después de crear
+        } catch (error) {
+            console.error('❌ Error al crear chat:', error);
+            alert('Error al crear el chat. Intenta de nuevo.');
         }
-    ];
+    };
+    // Función para cambiar de chat
+    const handleSelectChat = async (chatId)=>{
+        try {
+            await loadMessages(chatId);
+            onClose(); // Cerrar sidebar al seleccionar chat
+            console.log('✅ Chat seleccionado:', chatId);
+        } catch (error) {
+            console.error('❌ Error al cargar chat:', error);
+        }
+    };
+    // Función para eliminar un chat
+    const handleDeleteChat = async (chatId, e, chatTitle)=>{
+        e.stopPropagation(); // Evitar que se seleccione el chat al eliminar
+        const isCurrentChat = chatId === currentChatId;
+        const confirmMessage = isCurrentChat ? `¿Eliminar "${chatTitle}"?\n\nEste es tu chat actual. Se cargará otro automáticamente.` : `¿Eliminar "${chatTitle}"?`;
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+        try {
+            await deleteChat(chatId);
+            console.log('✅ Chat eliminado:', chatId);
+        } catch (error) {
+            console.error('❌ Error al eliminar chat:', error);
+            alert('Error al eliminar el chat. Intenta de nuevo.');
+        }
+    };
+    // Formatear fecha relativa
+    const getRelativeTime = (date)=>{
+        const now = new Date();
+        const chatDate = new Date(date);
+        const diffInMs = now.getTime() - chatDate.getTime();
+        const diffInMins = Math.floor(diffInMs / (1000 * 60));
+        const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+        if (diffInMins < 1) return 'Ahora';
+        if (diffInMins < 60) return `Hace ${diffInMins} min`;
+        if (diffInHours < 24) return `Hace ${diffInHours}h`;
+        if (diffInDays === 1) return 'Ayer';
+        if (diffInDays < 7) return `Hace ${diffInDays} días`;
+        return chatDate.toLocaleDateString();
+    };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
         children: [
             isOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -769,7 +797,7 @@ const Sidebar = ({ isOpen, onClose })=>{
                 onClick: onClose
             }, void 0, false, {
                 fileName: "[project]/components/Sidebar.tsx",
-                lineNumber: 29,
+                lineNumber: 92,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -783,7 +811,7 @@ const Sidebar = ({ isOpen, onClose })=>{
                                 children: "Historial de Chats"
                             }, void 0, false, {
                                 fileName: "[project]/components/Sidebar.tsx",
-                                lineNumber: 43,
+                                lineNumber: 106,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -793,173 +821,207 @@ const Sidebar = ({ isOpen, onClose })=>{
                                     size: 20
                                 }, void 0, false, {
                                     fileName: "[project]/components/Sidebar.tsx",
-                                    lineNumber: 48,
+                                    lineNumber: 111,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/components/Sidebar.tsx",
-                                lineNumber: 44,
+                                lineNumber: 107,
                                 columnNumber: 11
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/Sidebar.tsx",
-                        lineNumber: 42,
+                        lineNumber: 105,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "p-4",
                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                            className: "w-full bg-red-500 hover:bg-red-600 hover:scale-105 hover:shadow-lg hover:shadow-red-500/50 active:scale-95 text-black font-semibold py-3 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2",
+                            onClick: handleCreateNewChat,
+                            disabled: loading,
+                            className: "w-full bg-red-500 hover:bg-red-600 hover:scale-105 hover:shadow-lg hover:shadow-red-500/50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-black font-semibold py-3 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaPlus"], {}, void 0, false, {
                                     fileName: "[project]/components/Sidebar.tsx",
-                                    lineNumber: 55,
+                                    lineNumber: 122,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                    children: "Nuevo Chat"
+                                    children: loading ? 'Creando...' : 'Nuevo Chat'
                                 }, void 0, false, {
                                     fileName: "[project]/components/Sidebar.tsx",
-                                    lineNumber: 56,
+                                    lineNumber: 123,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/Sidebar.tsx",
-                            lineNumber: 54,
+                            lineNumber: 117,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/components/Sidebar.tsx",
-                        lineNumber: 53,
+                        lineNumber: 116,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "flex-1 overflow-y-auto custom-scrollbar px-4",
                         children: isLoggedIn ? // Si está logueado, mostrar historial
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        chats.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "space-y-2",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                     className: "text-xs text-gray-500 uppercase font-semibold mb-3",
-                                    children: "Recientes"
-                                }, void 0, false, {
+                                    children: [
+                                        "Recientes (",
+                                        chats.length,
+                                        ")"
+                                    ]
+                                }, void 0, true, {
                                     fileName: "[project]/components/Sidebar.tsx",
-                                    lineNumber: 65,
-                                    columnNumber: 15
+                                    lineNumber: 133,
+                                    columnNumber: 17
                                 }, ("TURBOPACK compile-time value", void 0)),
-                                chats.map((chat)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "w-full text-left p-3 rounded-lg bg-gray-800/50 hover:bg-gray-800 hover:scale-102 active:scale-98 border border-gray-700/50 hover:border-red-500/30 transition-all duration-200 group cursor-pointer",
-                                        onClick: ()=>{
-                                            // Aquí irá la lógica para abrir el chat
-                                            console.log('Abrir chat', chat.id);
-                                        },
+                                chats.map((chat)=>{
+                                    const isActive = chat.id === currentChatId;
+                                    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: `w-full text-left p-3 rounded-lg hover:scale-102 active:scale-98 border transition-all duration-200 group cursor-pointer ${isActive ? 'bg-red-500/20 border-red-500/50 shadow-lg shadow-red-500/20' : 'bg-gray-800/50 hover:bg-gray-800 border-gray-700/50 hover:border-red-500/30'}`,
+                                        onClick: ()=>handleSelectChat(chat.id),
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "flex items-start justify-between",
-                                                children: [
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "flex-1 min-w-0",
-                                                        children: [
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                className: "flex items-center space-x-2",
-                                                                children: [
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaComments"], {
-                                                                        className: "text-red-500 text-sm flex-shrink-0"
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/components/Sidebar.tsx",
-                                                                        lineNumber: 78,
-                                                                        columnNumber: 25
-                                                                    }, ("TURBOPACK compile-time value", void 0)),
-                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                                                                        className: "text-sm font-medium text-white truncate group-hover:text-red-500 transition-colors",
-                                                                        children: chat.title
-                                                                    }, void 0, false, {
-                                                                        fileName: "[project]/components/Sidebar.tsx",
-                                                                        lineNumber: 79,
-                                                                        columnNumber: 25
-                                                                    }, ("TURBOPACK compile-time value", void 0))
-                                                                ]
-                                                            }, void 0, true, {
-                                                                fileName: "[project]/components/Sidebar.tsx",
-                                                                lineNumber: 77,
-                                                                columnNumber: 23
-                                                            }, ("TURBOPACK compile-time value", void 0)),
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                                                className: "text-xs text-gray-500 mt-1",
-                                                                children: chat.lastMessage
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/components/Sidebar.tsx",
-                                                                lineNumber: 83,
-                                                                columnNumber: 23
-                                                            }, ("TURBOPACK compile-time value", void 0))
-                                                        ]
-                                                    }, void 0, true, {
-                                                        fileName: "[project]/components/Sidebar.tsx",
-                                                        lineNumber: 76,
-                                                        columnNumber: 21
-                                                    }, ("TURBOPACK compile-time value", void 0)),
-                                                    chat.unread > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                        className: "bg-red-500 text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 ml-2",
-                                                        children: chat.unread
-                                                    }, void 0, false, {
-                                                        fileName: "[project]/components/Sidebar.tsx",
-                                                        lineNumber: 86,
-                                                        columnNumber: 23
-                                                    }, ("TURBOPACK compile-time value", void 0))
-                                                ]
-                                            }, void 0, true, {
+                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "flex-1 min-w-0",
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                            className: "flex items-center space-x-2",
+                                                            children: [
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaComments"], {
+                                                                    className: `text-sm flex-shrink-0 ${isActive ? 'text-red-500' : 'text-red-500/70'}`
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/components/Sidebar.tsx",
+                                                                    lineNumber: 151,
+                                                                    columnNumber: 29
+                                                                }, ("TURBOPACK compile-time value", void 0)),
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                                                    className: `text-sm font-medium truncate transition-colors ${isActive ? 'text-red-400' : 'text-white group-hover:text-red-500'}`,
+                                                                    children: chat.title
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/components/Sidebar.tsx",
+                                                                    lineNumber: 156,
+                                                                    columnNumber: 29
+                                                                }, ("TURBOPACK compile-time value", void 0))
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "[project]/components/Sidebar.tsx",
+                                                            lineNumber: 150,
+                                                            columnNumber: 27
+                                                        }, ("TURBOPACK compile-time value", void 0)),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                            className: "text-xs text-gray-500 mt-1",
+                                                            children: [
+                                                                getRelativeTime(chat.updatedAt),
+                                                                chat._count && chat._count.messages > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
+                                                                    children: [
+                                                                        " · ",
+                                                                        chat._count.messages,
+                                                                        " mensajes"
+                                                                    ]
+                                                                }, void 0, true)
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "[project]/components/Sidebar.tsx",
+                                                            lineNumber: 166,
+                                                            columnNumber: 27
+                                                        }, ("TURBOPACK compile-time value", void 0))
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/components/Sidebar.tsx",
+                                                    lineNumber: 149,
+                                                    columnNumber: 25
+                                                }, ("TURBOPACK compile-time value", void 0))
+                                            }, void 0, false, {
                                                 fileName: "[project]/components/Sidebar.tsx",
-                                                lineNumber: 75,
-                                                columnNumber: 19
+                                                lineNumber: 148,
+                                                columnNumber: 23
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "mt-2 opacity-0 group-hover:opacity-100 transition-opacity",
                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                                    onClick: (e)=>{
-                                                        e.stopPropagation();
-                                                        // Aquí irá la lógica para eliminar
-                                                        console.log('Eliminar chat', chat.id);
-                                                    },
-                                                    className: "text-xs text-gray-500 hover:text-red-500 transition-colors flex items-center space-x-1",
+                                                    onClick: (e)=>handleDeleteChat(chat.id, e, chat.title),
+                                                    disabled: loading,
+                                                    className: "text-xs text-gray-500 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-1",
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaTrash"], {
                                                             size: 10
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/Sidebar.tsx",
-                                                            lineNumber: 102,
-                                                            columnNumber: 23
+                                                            lineNumber: 182,
+                                                            columnNumber: 27
                                                         }, ("TURBOPACK compile-time value", void 0)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                            children: "Eliminar"
+                                                            children: loading ? 'Eliminando...' : 'Eliminar'
                                                         }, void 0, false, {
                                                             fileName: "[project]/components/Sidebar.tsx",
-                                                            lineNumber: 103,
-                                                            columnNumber: 23
+                                                            lineNumber: 183,
+                                                            columnNumber: 27
                                                         }, ("TURBOPACK compile-time value", void 0))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/components/Sidebar.tsx",
-                                                    lineNumber: 94,
-                                                    columnNumber: 21
+                                                    lineNumber: 177,
+                                                    columnNumber: 25
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             }, void 0, false, {
                                                 fileName: "[project]/components/Sidebar.tsx",
-                                                lineNumber: 93,
-                                                columnNumber: 19
+                                                lineNumber: 176,
+                                                columnNumber: 23
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, chat.id, true, {
                                         fileName: "[project]/components/Sidebar.tsx",
-                                        lineNumber: 67,
-                                        columnNumber: 17
-                                    }, ("TURBOPACK compile-time value", void 0)))
+                                        lineNumber: 139,
+                                        columnNumber: 21
+                                    }, ("TURBOPACK compile-time value", void 0));
+                                })
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/Sidebar.tsx",
-                            lineNumber: 64,
-                            columnNumber: 13
+                            lineNumber: 132,
+                            columnNumber: 15
+                        }, ("TURBOPACK compile-time value", void 0)) : // Si no hay chats, mostrar mensaje
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "flex flex-col items-center justify-center h-64 text-center px-4",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaComments"], {
+                                    className: "text-gray-600 text-5xl mb-4"
+                                }, void 0, false, {
+                                    fileName: "[project]/components/Sidebar.tsx",
+                                    lineNumber: 193,
+                                    columnNumber: 17
+                                }, ("TURBOPACK compile-time value", void 0)),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                    className: "text-white font-semibold mb-2",
+                                    children: "Sin conversaciones"
+                                }, void 0, false, {
+                                    fileName: "[project]/components/Sidebar.tsx",
+                                    lineNumber: 194,
+                                    columnNumber: 17
+                                }, ("TURBOPACK compile-time value", void 0)),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                    className: "text-gray-400 text-sm mb-4",
+                                    children: "Crea un nuevo chat para comenzar a conversar con NetRunner AI"
+                                }, void 0, false, {
+                                    fileName: "[project]/components/Sidebar.tsx",
+                                    lineNumber: 195,
+                                    columnNumber: 17
+                                }, ("TURBOPACK compile-time value", void 0))
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/components/Sidebar.tsx",
+                            lineNumber: 192,
+                            columnNumber: 15
                         }, ("TURBOPACK compile-time value", void 0)) : // Si NO está logueado, mostrar mensaje
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             className: "flex flex-col items-center justify-center h-64 text-center px-4",
@@ -968,7 +1030,7 @@ const Sidebar = ({ isOpen, onClose })=>{
                                     className: "text-gray-600 text-5xl mb-4"
                                 }, void 0, false, {
                                     fileName: "[project]/components/Sidebar.tsx",
-                                    lineNumber: 112,
+                                    lineNumber: 203,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -976,7 +1038,7 @@ const Sidebar = ({ isOpen, onClose })=>{
                                     children: "Historial de Chats"
                                 }, void 0, false, {
                                     fileName: "[project]/components/Sidebar.tsx",
-                                    lineNumber: 113,
+                                    lineNumber: 204,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -984,7 +1046,7 @@ const Sidebar = ({ isOpen, onClose })=>{
                                     children: "Inicia sesión para guardar y acceder a tu historial de conversaciones"
                                 }, void 0, false, {
                                     fileName: "[project]/components/Sidebar.tsx",
-                                    lineNumber: 114,
+                                    lineNumber: 205,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -996,48 +1058,49 @@ const Sidebar = ({ isOpen, onClose })=>{
                                     children: "Iniciar Sesión"
                                 }, void 0, false, {
                                     fileName: "[project]/components/Sidebar.tsx",
-                                    lineNumber: 117,
+                                    lineNumber: 208,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/Sidebar.tsx",
-                            lineNumber: 111,
+                            lineNumber: 202,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/components/Sidebar.tsx",
-                        lineNumber: 61,
+                        lineNumber: 128,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "p-4 border-t border-gray-800",
                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                             className: "text-xs text-gray-500 text-center",
-                            children: isLoggedIn ? `${chats.length} conversaciones` : 'Sin historial guardado'
+                            children: isLoggedIn ? chats.length === 0 ? 'Sin conversaciones guardadas' : `${chats.length} conversación${chats.length === 1 ? '' : 'es'}` : 'Sin historial guardado'
                         }, void 0, false, {
                             fileName: "[project]/components/Sidebar.tsx",
-                            lineNumber: 132,
+                            lineNumber: 223,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/components/Sidebar.tsx",
-                        lineNumber: 131,
+                        lineNumber: 222,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/Sidebar.tsx",
-                lineNumber: 36,
+                lineNumber: 99,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true);
 };
-_s(Sidebar, "3ySFAeuUjQMRoCJ6DGVNj1/iwws=", false, function() {
+_s(Sidebar, "3w0ILh+6ScH+bwmZwjxrejNxQTM=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$context$2f$AuthContext$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"],
-        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"]
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$context$2f$ChatContext$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useChat"]
     ];
 });
 _c = Sidebar;
@@ -1082,46 +1145,62 @@ function Home() {
     const { chats, currentChatId, messages, loading, loadChats, createChat, loadMessages, sendMessage, resetChat } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$context$2f$ChatContext$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useChat"])();
     // Estado 2: Controla si el sidebar está abierto o cerrado
     const [sidebarOpen, setSidebarOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
-    // Ref para saber si es la primera carga o si acabamos de iniciar sesión
-    const prevLoggedIn = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(false);
-    // ==================== DETECTAR LOGIN/LOGOUT ====================
+    // Estado para saber si ya cargamos los chats
+    const [chatsLoaded, setChatsLoaded] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    // ==================== VERIFICAR AUTENTICACIÓN ====================
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "Home.useEffect": ()=>{
-            const handleAuthChange = {
-                "Home.useEffect.handleAuthChange": async ()=>{
-                    // Caso 1: Usuario acaba de hacer LOGOUT (true -> false)
-                    if (prevLoggedIn.current && !isLoggedIn) {
-                        console.log('🔴 Logout detectado - Limpiando chats');
-                        resetChat();
-                        router.push('/login');
-                        prevLoggedIn.current = false;
-                        return;
-                    }
-                    // Caso 2: Usuario acaba de hacer LOGIN (false -> true)
-                    if (!prevLoggedIn.current && isLoggedIn) {
-                        console.log('🟢 Login detectado - Creando nuevo chat');
-                        try {
-                            // Crear un nuevo chat automáticamente
-                            await createChat('Nueva Conversación');
-                        } catch (error) {
-                            console.error('Error al crear chat inicial:', error);
-                        }
-                        prevLoggedIn.current = true;
-                        return;
-                    }
-                    // Caso 3: No está logueado (redirigir)
-                    if (!isLoggedIn) {
-                        router.push('/login');
-                        return;
-                    }
-                    // Actualizar ref
-                    prevLoggedIn.current = isLoggedIn;
-                }
-            }["Home.useEffect.handleAuthChange"];
-            handleAuthChange();
+            if (!isLoggedIn) {
+                // Resetear estado cuando hace logout
+                setChatsLoaded(false);
+                router.push('/login');
+            }
         }
     }["Home.useEffect"], [
         isLoggedIn
+    ]);
+    // ==================== CARGAR CHATS AL INICIAR ====================
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "Home.useEffect": ()=>{
+            const initChats = {
+                "Home.useEffect.initChats": async ()=>{
+                    if (!isLoggedIn || chatsLoaded) return;
+                    try {
+                        await loadChats();
+                        setChatsLoaded(true);
+                    } catch (error) {
+                        console.error('Error al cargar chats:', error);
+                    }
+                }
+            }["Home.useEffect.initChats"];
+            initChats();
+        }
+    }["Home.useEffect"], [
+        isLoggedIn,
+        chatsLoaded
+    ]);
+    // ==================== GESTIONAR CHAT ACTIVO ====================
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "Home.useEffect": ()=>{
+            const manageActiveChat = {
+                "Home.useEffect.manageActiveChat": async ()=>{
+                    if (!chatsLoaded || !isLoggedIn) return;
+                    // Si hay chats pero ninguno seleccionado, cargar el primero
+                    if (chats.length > 0 && !currentChatId) {
+                        await loadMessages(chats[0].id);
+                    } else if (chats.length === 0 && !loading) {
+                        await createChat('Nueva Conversación');
+                    }
+                }
+            }["Home.useEffect.manageActiveChat"];
+            manageActiveChat();
+        }
+    }["Home.useEffect"], [
+        chats,
+        currentChatId,
+        chatsLoaded,
+        isLoggedIn,
+        loading
     ]);
     // Convertir mensajes del ChatContext al formato que espera MessageBox
     const formattedMessages = messages.map((msg)=>({
@@ -1168,14 +1247,14 @@ function Home() {
                 onClose: ()=>setSidebarOpen(false)
             }, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 169,
+                lineNumber: 174,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$Header$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                 onOpenSidebar: ()=>setSidebarOpen(true)
             }, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 175,
+                lineNumber: 180,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -1185,12 +1264,12 @@ function Home() {
                     isTyping: loading
                 }, void 0, false, {
                     fileName: "[project]/app/page.tsx",
-                    lineNumber: 186,
+                    lineNumber: 191,
                     columnNumber: 13
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 177,
+                lineNumber: 182,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1202,27 +1281,27 @@ function Home() {
                         isTyping: loading
                     }, void 0, false, {
                         fileName: "[project]/app/page.tsx",
-                        lineNumber: 207,
+                        lineNumber: 212,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/app/page.tsx",
-                    lineNumber: 191,
+                    lineNumber: 196,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/app/page.tsx",
-                lineNumber: 190,
+                lineNumber: 195,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/app/page.tsx",
-        lineNumber: 167,
+        lineNumber: 172,
         columnNumber: 5
     }, this);
 }
-_s(Home, "Q1R2jG62BALWXZygqtDGhGO1Vrw=", false, function() {
+_s(Home, "bQrnHFINc8B9uMeGtsQhDzLt7no=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"],
         __TURBOPACK__imported__module__$5b$project$5d2f$context$2f$AuthContext$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAuth"],
