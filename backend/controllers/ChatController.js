@@ -246,10 +246,37 @@ const deleteChat = async (req, res) => {
   }
 };
 
+/**
+ * Eliminar TODOS los chats de un usuario
+ */
+const deleteAllChats = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Eliminar todos los chats del usuario (los mensajes se eliminan en cascada)
+    const result = await prisma.chat.deleteMany({
+      where: { userId }
+    });
+
+    res.status(200).json({
+      message: 'Todos los chats eliminados exitosamente',
+      count: result.count
+    });
+
+  } catch (error) {
+    console.error('Error al eliminar todos los chats:', error);
+    res.status(500).json({
+      error: 'Error al eliminar todos los chats',
+      details: error.message
+    });
+  }
+};
+
 module.exports = {
   getUserChats,
   createChat,
   getChatMessages,
   sendMessage,
-  deleteChat
+  deleteChat,
+  deleteAllChats
 };

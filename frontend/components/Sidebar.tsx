@@ -68,6 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     }
   };
 
+
   // Formatear fecha relativa
   const getRelativeTime = (date: string) => {
     const now = new Date();
@@ -97,12 +98,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full w-80 bg-gray-900 border-r border-gray-800 z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full w-80 bg-gray-900 border-r border-gray-800 z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Header del Sidebar */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-800">
+        <div className="flex items-center justify-between p-4 border-b border-gray-800 flex-shrink-0">
           <h2 className="text-lg font-bold text-white">Historial de Chats</h2>
           <button
             onClick={onClose}
@@ -113,7 +114,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Botón Nuevo Chat */}
-        <div className="p-4">
+        <div className="p-4 flex-shrink-0">
           <button
             onClick={handleCreateNewChat}
             disabled={loading}
@@ -124,8 +125,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* Contenido del Sidebar */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar px-4">
+        {/* Contenido del Sidebar - SCROLLABLE */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar px-4 min-h-0">
           {isLoggedIn ? (
             // Si está logueado, mostrar historial
             chats.length > 0 ? (
@@ -219,7 +220,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer del Sidebar */}
-        <div className="p-4 border-t border-gray-800">
+        <div className="p-4 border-t border-gray-800 flex-shrink-0">
+          {/* Contador de chats */}
           <p className="text-xs text-gray-500 text-center">
             {isLoggedIn
               ? chats.length === 0

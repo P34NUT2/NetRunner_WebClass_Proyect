@@ -7,7 +7,8 @@ const {
   createChat,
   getChatMessages,
   sendMessage,
-  deleteChat
+  deleteChat,
+  deleteAllChats
 } = require('../controllers/ChatController');
 
 const verifyToken = require('../middlewares/verifyToken');
@@ -20,6 +21,9 @@ router.get('/', getUserChats);
 
 // Crear un nuevo chat
 router.post('/', createChat);
+
+// Eliminar TODOS los chats (debe ir ANTES de /:chatId para evitar conflicto)
+router.delete('/all', deleteAllChats);
 
 // Obtener mensajes de un chat específico
 router.get('/:chatId/messages', getChatMessages);

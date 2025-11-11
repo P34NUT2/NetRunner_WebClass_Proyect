@@ -35,6 +35,7 @@ interface ChatContextType {
   loadMessages: (chatId: number) => Promise<void>;
   sendMessage: (chatId: number, content: string) => Promise<void>;
   deleteChat: (chatId: number) => Promise<void>;
+  deleteAllChats: () => Promise<void>;
   setCurrentChatId: (chatId: number | null) => void;
   resetChat: () => void;
 }
@@ -238,6 +239,36 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // ===== ELIMINAR TODOS LOS CHATS =====
+  const deleteAllChats = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_URL}/api/chat/all`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al eliminar todos los chats');
+      }
+
+      // Limpiar todo
+      setChats([]);
+      setCurrentChatId(null);
+      setMessages([]);
+
+      // Crear un nuevo chat automáticamente
+      await createChat('Nueva Conversación');
+
+    } catch (error: any) {
+      console.error('Error eliminando todos los chats:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ===== RESETEAR CHAT (Para logout) =====
   const resetChat = () => {
     setChats([]);
@@ -256,6 +287,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loadMessages,
     sendMessage,
     deleteChat,
+    deleteAllChats,
     setCurrentChatId,
     resetChat
   };

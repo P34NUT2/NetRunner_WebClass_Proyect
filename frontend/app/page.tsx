@@ -8,6 +8,7 @@ import Header from '@/components/Header';
 import MessageBox from '@/components/MessagesBox';
 import InputArea from '@/components/InputArea';
 import Sidebar from '@/components/Sidebar';
+import InfoModal from '@/components/InfoModal';
 
 /**
  * ═══════════════════════════════════════════════════════════════════════
@@ -80,6 +81,9 @@ export default function Home() {
   // Estado 2: Controla si el sidebar está abierto o cerrado
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
+  // Estado 3: Controla si el modal de info está abierto
+  const [infoModalOpen, setInfoModalOpen] = useState<boolean>(false);
+
   // Estado para saber si ya cargamos los chats
   const [chatsLoaded, setChatsLoaded] = useState<boolean>(false);
 
@@ -111,20 +115,21 @@ export default function Home() {
   // ==================== GESTIONAR CHAT ACTIVO ====================
   useEffect(() => {
     const manageActiveChat = async () => {
-      if (!chatsLoaded || !isLoggedIn) return;
+      if (!chatsLoaded || !isLoggedIn || loading) return;
 
       // Si hay chats pero ninguno seleccionado, cargar el primero
       if (chats.length > 0 && !currentChatId) {
         await loadMessages(chats[0].id);
       }
       // Si no hay chats, crear uno
-      else if (chats.length === 0 && !loading) {
+      else if (chats.length === 0) {
         await createChat('Nueva Conversación');
       }
     };
 
     manageActiveChat();
-  }, [chats, currentChatId, chatsLoaded, isLoggedIn, loading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatsLoaded, isLoggedIn]);
 
   // Convertir mensajes del ChatContext al formato que espera MessageBox
   const formattedMessages = messages.map(msg => ({
@@ -173,11 +178,17 @@ export default function Home() {
         {/* ========== COMPONENTE HIJO: Sidebar ========== */}
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
+        {/* ========== COMPONENTE HIJO: InfoModal ========== */}
+        <InfoModal isOpen={infoModalOpen} onClose={() => setInfoModalOpen(false)} />
+
         {/* ========== COMPONENTE HIJO 1: Header ========== */}
         {/*
-          Header recibe la función para abrir el sidebar.
+          Header recibe la función para abrir el sidebar y el modal de info.
         */}
-        <Header onOpenSidebar={() => setSidebarOpen(true)} />
+        <Header
+          onOpenSidebar={() => setSidebarOpen(true)}
+          onOpenSettings={() => setInfoModalOpen(true)}
+        />
 
         <main className="flex-1 container mx-auto px-4 py-6 max-w-4xl pt-24">
             {/* ========== COMPONENTE HIJO 2: MessageBox ========== */}
