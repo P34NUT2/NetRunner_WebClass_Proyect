@@ -65,7 +65,7 @@ import InfoModal from '@/components/InfoModal';
  */
 export default function Home() {
   const router = useRouter();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, loading: authLoading } = useAuth();
   const {
     chats,
     currentChatId,
@@ -89,12 +89,13 @@ export default function Home() {
 
   // ==================== VERIFICAR AUTENTICACIÓN ====================
   useEffect(() => {
-    if (!isLoggedIn) {
+    // Solo redirigir si ya terminó de cargar y NO está logueado
+    if (!authLoading && !isLoggedIn) {
       // Resetear estado cuando hace logout
       setChatsLoaded(false);
       router.push('/login');
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, authLoading, router]);
 
   // ==================== CARGAR CHATS AL INICIAR ====================
   useEffect(() => {
@@ -117,12 +118,23 @@ export default function Home() {
     const manageActiveChat = async () => {
       if (!chatsLoaded || !isLoggedIn || loading) return;
 
+      // Si hay un chat guardado en currentChatId, cargar sus mensajes (solo si no tiene mensajes cargados)
+      if (currentChatId && chats.length > 0 && messages.length === 0) {
+        // Verificar que el chat existe
+        const chatExists = chats.find(chat => chat.id === currentChatId);
+        if (chatExists) {
+          await loadMessages(currentChatId);
+        } else {
+          // Si el chat guardado ya no existe, cargar el primero
+          await loadMessages(chats[0].id);
+        }
+      }
       // Si hay chats pero ninguno seleccionado, cargar el primero
-      if (chats.length > 0 && !currentChatId) {
+      else if (chats.length > 0 && !currentChatId && messages.length === 0) {
         await loadMessages(chats[0].id);
       }
       // Si no hay chats, crear uno
-      else if (chats.length === 0) {
+      else if (chats.length === 0 && !loading) {
         await createChat('Nueva Conversación');
       }
     };
@@ -168,6 +180,18 @@ export default function Home() {
   };
 
   // ==================== RENDERIZADO ====================
+  // Mostrar pantalla de carga mientras verifica autenticación
+  if (authLoading) {
+    return (
+      <div className="bg-black text-gray-100 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Si no está autenticado, no mostrar nada (se redirige a login)
   if (!isLoggedIn) {
     return null;

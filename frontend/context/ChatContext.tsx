@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 // ===== CONFIGURACIÓN =====
 const API_URL = 'http://localhost:3001';
@@ -46,9 +46,27 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 // ===== PROVIDER =====
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [chats, setChats] = useState<Chat[]>([]);
-  const [currentChatId, setCurrentChatId] = useState<number | null>(null);
+  const [currentChatId, setCurrentChatIdState] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+
+  // Wrapper para setCurrentChatId que también guarda en localStorage
+  const setCurrentChatId = (chatId: number | null) => {
+    setCurrentChatIdState(chatId);
+    if (chatId !== null) {
+      localStorage.setItem('currentChatId', chatId.toString());
+    } else {
+      localStorage.removeItem('currentChatId');
+    }
+  };
+
+  // Restaurar currentChatId desde localStorage al iniciar
+  useEffect(() => {
+    const savedChatId = localStorage.getItem('currentChatId');
+    if (savedChatId) {
+      setCurrentChatIdState(parseInt(savedChatId));
+    }
+  }, []);
 
   // ===== OBTENER TOKEN PARA LAS PETICIONES =====
   const getHeaders = () => {
@@ -275,6 +293,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentChatId(null);
     setMessages([]);
     setLoading(false);
+    localStorage.removeItem('currentChatId');
   };
 
   const value = {
