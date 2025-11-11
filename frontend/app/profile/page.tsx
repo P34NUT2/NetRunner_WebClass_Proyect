@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FaUser, FaEnvelope, FaCalendar, FaShieldAlt, FaArrowLeft, FaEdit, FaSave, FaTimes } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaShieldAlt, FaArrowLeft, FaEdit, FaSave, FaTimes } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import Header from '@/components/Header';
 
@@ -108,15 +108,6 @@ export default function Profile() {
     setError('');
   };
 
-  // Formatear fecha de creación
-  const createdDate = user.createdAt
-    ? new Date(user.createdAt).toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
-    : 'No disponible';
-
   return (
     <div className="bg-black text-gray-100 min-h-screen">
       {/* Header */}
@@ -207,15 +198,6 @@ export default function Profile() {
                       </span>
                     )}
                   </p>
-                </div>
-              </div>
-
-              {/* Fecha de registro */}
-              <div className="flex items-start space-x-3">
-                <FaCalendar className="text-red-500 mt-1" />
-                <div>
-                  <p className="text-sm text-gray-400">Miembro desde</p>
-                  <p className="text-white font-medium">{createdDate}</p>
                 </div>
               </div>
             </div>
