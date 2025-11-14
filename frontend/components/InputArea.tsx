@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaPaperclip, FaPaperPlane } from "react-icons/fa";
+import { FaPaperPlane } from "react-icons/fa";
 
 /**
  * ========== COMPONENTE HIJO: InputArea ==========
@@ -94,19 +94,13 @@ const InputArea: React.FC<Props> = ({ onSendMessage, isTyping }) => {
             value={message}
             onChange={handleInputChange}
             disabled={isTyping}
-            className={`w-full border rounded-lg px-4 py-3 pr-12 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none textarea-scrollbar ${
+            className={`w-full border rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none textarea-scrollbar ${
               isTyping
                 ? "bg-gray-700 border-gray-600 cursor-not-allowed opacity-70"
                 : "bg-gray-800 border-gray-700"
             }`}
             style={{ minHeight: "50px", maxHeight: "230px" }}
           />
-          <button
-            type="button"
-            className="absolute right-3 bottom-3 text-gray-400 hover:text-red-500 hover:scale-125 active:scale-95 transition-all duration-200"
-          >
-            <FaPaperclip />
-          </button>
         </div>
         <button
           type="submit"
