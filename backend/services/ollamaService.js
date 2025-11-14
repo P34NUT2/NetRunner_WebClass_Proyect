@@ -23,9 +23,9 @@ const sendMessage = async (prompt, context = []) => {
       }
     ];
 
-    // Enviar a Ollama
+    // Enviar a Ollama con modelo personalizado
     const response = await ollama.chat({
-      model: 'llama3.2',
+      model: 'netrunner-tiny',
       messages: messages,
       stream: false // Sin streaming por ahora
     });
@@ -50,7 +50,7 @@ const sendMessage = async (prompt, context = []) => {
 const checkHealth = async () => {
   try {
     const models = await ollama.list();
-    return models.models.some(m => m.name.includes('llama3.2'));
+    return models.models.some(m => m.name.includes('netrunner-tiny'));
   } catch (error) {
     console.error('Ollama no está disponible:', error);
     return false;

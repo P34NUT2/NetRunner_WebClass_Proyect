@@ -176,8 +176,8 @@ const sendMessage = async (req, res) => {
     if (messageCount === 2) {
       // Es el primer intercambio (1 user + 1 assistant = 2 mensajes)
       // Actualizar título del chat con el primer mensaje del usuario (truncado)
-      const newTitle = content.length > 50
-        ? content.substring(0, 50) + '...'
+      const newTitle = content.length > 47
+        ? content.substring(0, 47) + '...'
         : content;
 
       updatedChat = await prisma.chat.update({

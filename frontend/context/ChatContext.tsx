@@ -261,13 +261,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const updatedMessagesWithUser = [...currentMessages, userMsg];
         saveGuestMessages(chatId, updatedMessagesWithUser);
 
-        // Llamar a Ollama directamente desde el frontend
+        // Llamar a Ollama directamente desde el frontend con modelo personalizado
         try {
           const ollamaResponse = await fetch('http://localhost:11434/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              model: 'llama3.2',
+              model: 'netrunner-custom',
               messages: updatedMessagesWithUser.slice(-10).map(m => ({
                 role: m.role,
                 content: m.content
