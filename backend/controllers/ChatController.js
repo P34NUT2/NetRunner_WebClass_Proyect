@@ -105,7 +105,127 @@ const getChatMessages = async (req, res) => {
 };
 
 /**
- * Enviar un mensaje y obtener respuesta de Ollama
+ * Enviar un mensaje y obtener respuesta de Ollama CON STREAMING
+ */
+const sendMessageStream = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const chatId = parseInt(req.params.chatId);
+    const { content } = req.body;
+
+    if (!content) {
+      return res.status(400).json({ error: 'El mensaje es requerido' });
+    }
+
+    // Verificar que el chat pertenezca al usuario
+    const chat = await prisma.chat.findFirst({
+      where: {
+        id: chatId,
+        userId
+      }
+    });
+
+    if (!chat) {
+      return res.status(404).json({ error: 'Chat no encontrado' });
+    }
+
+    // Guardar el mensaje del usuario
+    const userMessage = await prisma.message.create({
+      data: {
+        chatId,
+        role: 'user',
+        content
+      }
+    });
+
+    // Obtener contexto (últimos 10 mensajes)
+    const previousMessages = await prisma.message.findMany({
+      where: { chatId },
+      orderBy: { createdAt: 'asc' },
+      take: 10,
+      select: {
+        role: true,
+        content: true
+      }
+    });
+
+    // Construir contexto para Ollama
+    const context = previousMessages.slice(0, -1).map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+
+    // Configurar SSE (Server-Sent Events)
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    let fullResponse = '';
+
+    // Enviar a Ollama con streaming
+    const response = await ollamaService.sendMessageStream(
+      content,
+      context,
+      (chunk) => {
+        // Cada vez que llega un pedazo de texto, enviarlo al frontend
+        fullResponse += chunk;
+        res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+      }
+    );
+
+    // Guardar respuesta completa en la base de datos
+    const assistantMessage = await prisma.message.create({
+      data: {
+        chatId,
+        role: 'assistant',
+        content: fullResponse
+      }
+    });
+
+    // Actualizar timestamp del chat
+    const messageCount = await prisma.message.count({
+      where: { chatId }
+    });
+
+    let updatedChat;
+    if (messageCount === 2) {
+      const newTitle = content.length > 47
+        ? content.substring(0, 47) + '...'
+        : content;
+
+      updatedChat = await prisma.chat.update({
+        where: { id: chatId },
+        data: {
+          title: newTitle,
+          updatedAt: new Date()
+        }
+      });
+    } else {
+      updatedChat = await prisma.chat.update({
+        where: { id: chatId },
+        data: { updatedAt: new Date() }
+      });
+    }
+
+    // Enviar mensaje final con datos completos
+    res.write(`data: ${JSON.stringify({
+      done: true,
+      userMessage,
+      assistantMessage,
+      chat: updatedChat
+    })}\n\n`);
+
+    res.end();
+
+  } catch (error) {
+    console.error('Error al enviar mensaje con streaming:', error);
+    res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+    res.end();
+  }
+};
+
+/**
+ * Enviar un mensaje y obtener respuesta de Ollama (SIN streaming - legacy)
  */
 const sendMessage = async (req, res) => {
   try {
@@ -155,7 +275,7 @@ const sendMessage = async (req, res) => {
       content: msg.content
     }));
 
-    // Enviar a Ollama
+    // Enviar a Ollama (el modelo ya tiene el contexto integrado)
     const ollamaResponse = await ollamaService.sendMessage(content, context);
 
     // Guardar respuesta de Ollama
@@ -277,6 +397,7 @@ module.exports = {
   createChat,
   getChatMessages,
   sendMessage,
+  sendMessageStream,
   deleteChat,
   deleteAllChats
 };

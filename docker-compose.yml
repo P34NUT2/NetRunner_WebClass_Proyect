@@ -39,7 +39,7 @@ services:
       - netrunner_network
 
 ########################################################
-# Ollama para IA (llama3.2)
+# Ollama para IA (dolphin-llama3 + netrunner)
 ########################################################
 ##lo deje con los puertos default que venian en la documentacion
   ollama:
@@ -51,8 +51,8 @@ services:
     volumes:
       # Guardar modelos descargados (2-10GB)
       - ollama_data:/root/.ollama
-      # Montar el Modelfile para crear modelo personalizado
-      - ./netrunner-model:/netrunner-model:ro
+      # Montar el Modelfile minimal para crear modelo personalizado
+      - ./netrunner-minimal:/netrunner-minimal:ro
     networks:
       - netrunner_network
     environment:
@@ -64,9 +64,11 @@ services:
       retries: 3
 
 ########################################################
-# Script para descargar llama3.2 automáticamente
-# NOTA: Solo descarga si el modelo NO existe (verifica primero)
-# El modelo se guarda en ollama_data (persistente entre reinicios)
+# Script para auto-setup de modelos:
+# 1. Descarga dolphin-llama3 (base uncensored)
+# 2. Crea modelo netrunner (personalizado con técnicas CTF)
+# NOTA: Solo descarga/crea si NO existe (verifica primero)
+# Los modelos se guardan en ollama_data (persistente)
 ########################################################
   ollama-pull:
     image: docker:cli
@@ -77,13 +79,17 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     entrypoint: /bin/sh
-    ####por lo que lei al hacer el pull es algo inteligente verifica si exixte si no 
-    ##lo descarga si existe solo lo incia sin descargarlo dos veces
     command: >
       -c "
-      echo '🚀 Verificando modelo llama3.2...';
-      docker exec netrunner_ollama ollama pull llama3.2; 
-      echo '✅ Modelo listo para usar!';
+      echo '🚀 [1/2] Descargando dolphin-llama3 (uncensored)...';
+      docker exec netrunner_ollama ollama pull dolphin-llama3;
+      echo '✅ dolphin-llama3 listo!';
+      echo '';
+      echo '🧠 [2/2] Creando modelo netrunner (CTF personalizado)...';
+      docker exec netrunner_ollama ollama create netrunner -f /netrunner-minimal;
+      echo '✅ Modelo netrunner creado!';
+      echo '';
+      echo '🎉 Setup completo! NetRunner AI está listo para usar.';
       "
     restart: "no"
 

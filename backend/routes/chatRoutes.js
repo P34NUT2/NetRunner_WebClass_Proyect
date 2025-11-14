@@ -7,6 +7,7 @@ const {
   createChat,
   getChatMessages,
   sendMessage,
+  sendMessageStream,
   deleteChat,
   deleteAllChats
 } = require('../controllers/ChatController');
@@ -28,8 +29,11 @@ router.delete('/all', deleteAllChats);
 // Obtener mensajes de un chat específico
 router.get('/:chatId/messages', getChatMessages);
 
-// Enviar mensaje y obtener respuesta de Ollama
+// Enviar mensaje y obtener respuesta de Ollama (sin streaming - legacy)
 router.post('/:chatId/messages', sendMessage);
+
+// Enviar mensaje y obtener respuesta con STREAMING
+router.post('/:chatId/stream', sendMessageStream);
 
 // Eliminar un chat
 router.delete('/:chatId', deleteChat);

@@ -261,13 +261,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const updatedMessagesWithUser = [...currentMessages, userMsg];
         saveGuestMessages(chatId, updatedMessagesWithUser);
 
-        // Llamar a Ollama directamente desde el frontend con modelo personalizado
+        // Llamar a Ollama directamente desde el frontend con modelo netrunner
         try {
           const ollamaResponse = await fetch('http://localhost:11434/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              model: 'netrunner-custom',
+              model: 'netrunner',
               messages: updatedMessagesWithUser.slice(-10).map(m => ({
                 role: m.role,
                 content: m.content
@@ -323,10 +323,27 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // MODO AUTENTICADO: Enviar al backend y esperar respuesta de Ollama
-      const response = await fetch(`${API_URL}/api/chat/${chatId}/messages`, {
+      // MODO AUTENTICADO: Enviar al backend con STREAMING
+      const token = localStorage.getItem('token');
+
+      // Crear mensaje temporal de la IA que se irá llenando
+      const tempAIMessage: Message = {
+        id: Date.now() + 1,
+        chatId,
+        role: 'assistant',
+        content: '', // Se llenará con streaming
+        createdAt: new Date().toISOString()
+      };
+
+      setMessages(prev => [...prev, tempAIMessage]);
+
+      // Usar fetch con streaming
+      const response = await fetch(`${API_URL}/api/chat/${chatId}/stream`, {
         method: 'POST',
-        headers: getHeaders(),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         credentials: 'include',
         body: JSON.stringify({ content })
       });
@@ -335,19 +352,67 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('Error al enviar mensaje');
       }
 
-      const data = await response.json();
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
 
-      // 4. Agregar SOLO el mensaje del asistente (el del usuario ya está)
-      setMessages(prev => [
-        ...prev,
-        data.assistantMessage
-      ]);
+      if (!reader) {
+        throw new Error('No se pudo obtener el stream');
+      }
 
-      // 5. Actualizar el chat en la lista (título puede haber cambiado)
-      if (data.chat) {
-        setChats(prev => prev.map(chat =>
-          chat.id === data.chat.id ? data.chat : chat
-        ));
+      let buffer = '';
+      let fullResponse = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6);
+            try {
+              const data = JSON.parse(dataStr);
+
+              if (data.chunk) {
+                // Actualizar el mensaje de la IA con el nuevo chunk
+                fullResponse += data.chunk;
+                setMessages(prev => prev.map(msg =>
+                  msg.id === tempAIMessage.id
+                    ? { ...msg, content: fullResponse }
+                    : msg
+                ));
+              }
+
+              if (data.done) {
+                // Streaming terminado, actualizar con datos finales
+                if (data.assistantMessage) {
+                  setMessages(prev => prev.map(msg =>
+                    msg.id === tempAIMessage.id
+                      ? { ...msg, id: data.assistantMessage.id, content: data.assistantMessage.content }
+                      : msg
+                  ));
+                }
+
+                // Actualizar el chat en la lista
+                if (data.chat) {
+                  setChats(prev => prev.map(chat =>
+                    chat.id === data.chat.id ? data.chat : chat
+                  ));
+                }
+              }
+
+              if (data.error) {
+                throw new Error(data.error);
+              }
+            } catch (parseError) {
+              console.error('Error parseando chunk:', parseError);
+            }
+          }
+        }
       }
 
     } catch (error: any) {
