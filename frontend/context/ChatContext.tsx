@@ -253,7 +253,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 2. Activar loading para la respuesta de la IA
       setLoading(true);
 
-      // MODO INVITADO: Guardar en localStorage y llamar a Ollama directamente
+      // MODO INVITADO: Guardar en localStorage y llamar al backend (SIN streaming)
       if (!isLoggedIn) {
         // Guardar mensaje del usuario
         const currentMessages = getGuestMessages(chatId);
@@ -261,35 +261,34 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const updatedMessagesWithUser = [...currentMessages, userMsg];
         saveGuestMessages(chatId, updatedMessagesWithUser);
 
-        // Llamar a Ollama directamente desde el frontend con modelo netrunner
+        // Llamar al backend (endpoint público sin streaming)
         try {
-          const ollamaResponse = await fetch('http://localhost:11434/api/chat', {
+          const response = await fetch(`${API_URL}/api/chat/guest/message`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              model: 'netrunner',
               messages: updatedMessagesWithUser.slice(-10).map(m => ({
                 role: m.role,
                 content: m.content
-              })),
-              stream: false
+              }))
             })
           });
 
-          if (!ollamaResponse.ok) {
-            throw new Error('Error al conectar con Ollama');
+          if (!response.ok) {
+            throw new Error('Error al conectar con el servidor');
           }
 
-          const ollamaData = await ollamaResponse.json();
+          const data = await response.json();
+
+          // Guardar respuesta de la IA
           const assistantMessage: Message = {
             id: Date.now() + 1,
             chatId,
             role: 'assistant',
-            content: ollamaData.message.content,
+            content: data.message,
             createdAt: new Date().toISOString()
           };
 
-          // Guardar respuesta de Ollama
           const finalMessages = [...updatedMessagesWithUser, assistantMessage];
           saveGuestMessages(chatId, finalMessages);
           setMessages(finalMessages);
@@ -305,19 +304,22 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setChats(currentChats);
           }
 
-        } catch (ollamaError: any) {
-          console.error('Error con Ollama:', ollamaError);
-          // Si falla Ollama, dar una respuesta por defecto
+        } catch (error: any) {
+          console.error('Error en modo invitado:', error);
+          // Si falla, dar una respuesta de error
           const errorMessage: Message = {
             id: Date.now() + 1,
             chatId,
             role: 'assistant',
-            content: '⚠️ No se pudo conectar con Ollama. Asegúrate de que esté corriendo (puerto 11434).',
+            content: '⚠️ No se pudo conectar con el servidor. Asegúrate de que el backend esté corriendo.',
             createdAt: new Date().toISOString()
           };
           const messagesWithError = [...updatedMessagesWithUser, errorMessage];
           saveGuestMessages(chatId, messagesWithError);
           setMessages(messagesWithError);
+        } finally {
+          // Desactivar loading cuando termine (éxito o error)
+          setLoading(false);
         }
 
         return;

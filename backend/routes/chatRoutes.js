@@ -8,13 +8,21 @@ const {
   getChatMessages,
   sendMessage,
   sendMessageStream,
+  sendMessageGuest,
+  sendMessageGuestStream,
   deleteChat,
   deleteAllChats
 } = require('../controllers/ChatController');
 
 const verifyToken = require('../middlewares/verifyToken');
 
-// Todas las rutas requieren autenticación
+// ===== RUTAS PÚBLICAS (SIN AUTENTICACIÓN) =====
+// Endpoints para modo invitado - NO requieren token
+router.post('/guest/message', sendMessageGuest); // Sin streaming (legacy)
+router.post('/guest/stream', sendMessageGuestStream); // Con streaming ✨
+
+// ===== RUTAS PROTEGIDAS (REQUIEREN AUTENTICACIÓN) =====
+// Todas las rutas de aquí en adelante requieren autenticación
 router.use(verifyToken);
 
 // Obtener todos los chats del usuario

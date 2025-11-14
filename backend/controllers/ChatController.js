@@ -392,12 +392,103 @@ const deleteAllChats = async (req, res) => {
   }
 };
 
+/**
+ * Enviar mensaje en MODO INVITADO con STREAMING (sin autenticación)
+ * Solo devuelve la respuesta de Ollama, no guarda en BD
+ */
+const sendMessageGuestStream = async (req, res) => {
+  try {
+    const { messages } = req.body;
+
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Se requiere un array de mensajes' });
+    }
+
+    // Construir contexto para Ollama (últimos 10 mensajes)
+    const context = messages.slice(-10).map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+
+    // Configurar SSE (Server-Sent Events)
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    let fullResponse = '';
+
+    // Enviar a Ollama con streaming (sin guardar en base de datos)
+    const response = await ollamaService.sendMessageStream(
+      messages[messages.length - 1].content,
+      context.slice(0, -1), // Todos menos el último (que ya está en el prompt)
+      (chunk) => {
+        // Cada vez que llega un pedazo de texto, enviarlo al frontend
+        fullResponse += chunk;
+        res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+      }
+    );
+
+    // Enviar mensaje final
+    res.write(`data: ${JSON.stringify({
+      done: true,
+      message: fullResponse
+    })}\n\n`);
+
+    res.end();
+
+  } catch (error) {
+    console.error('Error en modo invitado con streaming:', error);
+    res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+    res.end();
+  }
+};
+
+/**
+ * Enviar mensaje en MODO INVITADO (sin autenticación, sin streaming - legacy)
+ * Solo devuelve la respuesta de Ollama, no guarda en BD
+ */
+const sendMessageGuest = async (req, res) => {
+  try {
+    const { messages } = req.body;
+
+    if (!messages || !Array.isArray(messages)) {
+      return res.status(400).json({ error: 'Se requiere un array de mensajes' });
+    }
+
+    // Construir contexto para Ollama (últimos 10 mensajes)
+    const context = messages.slice(-10).map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+
+    // Enviar a Ollama (sin guardar en base de datos)
+    const ollamaResponse = await ollamaService.sendMessage(
+      messages[messages.length - 1].content,
+      context.slice(0, -1) // Todos menos el último (que ya está en el prompt)
+    );
+
+    res.status(200).json({
+      success: true,
+      message: ollamaResponse.message
+    });
+
+  } catch (error) {
+    console.error('Error en modo invitado:', error);
+    res.status(500).json({
+      error: 'Error al procesar mensaje',
+      details: error.message
+    });
+  }
+};
+
 module.exports = {
   getUserChats,
   createChat,
   getChatMessages,
   sendMessage,
   sendMessageStream,
+  sendMessageGuest,
+  sendMessageGuestStream,
   deleteChat,
   deleteAllChats
 };

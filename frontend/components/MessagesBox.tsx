@@ -3,10 +3,10 @@ import { FaRobot, FaUser } from "react-icons/fa";
 
 interface Props {
   messages: {text: string, sender: 'user' | 'bot'}[];
-  isTyping?: boolean; // Opcional, ya no se usa pero se mantiene por compatibilidad
+  isTyping?: boolean;
 }
 
-const MessageBox: React.FC<Props> = ({ messages }) => {
+const MessageBox: React.FC<Props> = ({ messages, isTyping }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll al final cuando cambian los mensajes
@@ -63,6 +63,23 @@ const MessageBox: React.FC<Props> = ({ messages }) => {
           )}
         </div>
       ))}
+
+      {/* Indicador de "is typing" cuando la IA está procesando */}
+      {isTyping && (
+        <div className="flex">
+          <div className="w-8 h-8 bg-red-500 rounded-full flex-shrink-0 flex items-center justify-center mr-3">
+            <FaRobot className="text-black" />
+          </div>
+          <div className="bg-gray-900 rounded-lg p-4 max-w-[85%]">
+            <p className="text-sm text-gray-400 mb-1">NetRunner</p>
+            <p className="text-white typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Elemento invisible para auto-scroll */}
       <div ref={messagesEndRef} />
