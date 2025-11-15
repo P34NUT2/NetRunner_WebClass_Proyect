@@ -1,4 +1,5 @@
-# NETRUNNER TINY - VELOCIDAD MÁXIMA
+# NETRUNNER TINY - VELOCIDAD MÁXIMA 
+##no pude darle un contexto mas grande que este tardaba mucho 
 FROM dolphin-llama3:latest
 
 SYSTEM """
