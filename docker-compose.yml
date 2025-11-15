@@ -94,6 +94,47 @@ services:
     restart: "no"
 
 #########################################
+# Backend (Node.js + Express + Prisma)
+#########################################
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: netrunner_backend
+    restart: always
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./backend/.env.docker
+    depends_on:
+      - postgres
+      - ollama
+    networks:
+      - netrunner_network
+    # volumes:
+      # Volumen para desarrollo con hot reload (descomentar si quieres ver cambios en tiempo real)
+      # - ./backend:/app
+      # - /app/node_modules
+
+#########################################
+# Frontend (Next.js)
+#########################################
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: netrunner_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    depends_on:
+      - backend
+    networks:
+      - netrunner_network
+
+#########################################
 # Redes
 #########################################
 networks:

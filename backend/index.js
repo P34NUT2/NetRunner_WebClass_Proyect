@@ -10,7 +10,7 @@ const ChatRoutes = require('./routes/chatRoutes');
 // ===== CONFIGURACIÓN DE CORS =====
 // Permitir peticiones desde el frontend
 const corsOptions = {
-  origin: 'http://localhost:3000', // URL del frontend Next.js
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000', // URL del frontend Next.js
   credentials: true, // Permitir envío de cookies y headers de autenticación
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
