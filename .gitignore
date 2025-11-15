@@ -36,6 +36,8 @@ docker-compose.override.yml
 
 # My documents and notes
 GUIA_OLLAMA_EXPERIMENTOS.md
+EXPLICACION_TOKENS_Y_CONTEXTO.md
+GUIA_OLLAMA.md
 
 # Archivos de contexto y documentación (ignorar todos excepto README.md)
 *.md
