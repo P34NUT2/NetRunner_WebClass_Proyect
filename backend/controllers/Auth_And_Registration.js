@@ -219,10 +219,62 @@ const getProfile = async (req, res) => {
   }
 };
 
+//////////////////////////////////
+// ACTUALIZAR PERFIL
+//////////////////////////////////
+const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { realName } = req.body;
+
+    // Validar que realName esté presente
+    if (!realName) {
+      return res.status(400).json({
+        error: 'El nombre completo es requerido'
+      });
+    }
+
+    // Validar longitud
+    if (realName.length > 50) {
+      return res.status(400).json({
+        error: 'El nombre real no puede tener más de 50 caracteres'
+      });
+    }
+
+    // Actualizar usuario
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { realName },
+      select: {
+        id: true,
+        username: true,
+        realName: true,
+        role: true,
+        profileImg: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+
+    res.status(200).json({
+      message: 'Perfil actualizado exitosamente',
+      user: updatedUser
+    });
+
+  } catch (error) {
+    console.error('Error al actualizar perfil:', error);
+    res.status(500).json({
+      error: 'Error al actualizar perfil',
+      details: error.message
+    });
+  }
+};
+
 //exportamos todo esto
-module.exports = { 
+module.exports = {
     register,
     login,
-    getProfile
+    getProfile,
+    updateProfile
  };
 

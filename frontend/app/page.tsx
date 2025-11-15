@@ -1,10 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useChat } from '@/context/ChatContext';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Header from '@/components/Header';
 import MessageBox from '@/components/MessagesBox';
 import InputArea from '@/components/InputArea';
 import Sidebar from '@/components/Sidebar';
+import InfoModal from '@/components/InfoModal';
 
 /**
  * ═══════════════════════════════════════════════════════════════════════
@@ -60,106 +65,163 @@ import Sidebar from '@/components/Sidebar';
  * ═══════════════════════════════════════════════════════════════════════
  */
 export default function Home() {
-  // ==================== ESTADO (STATE) ====================
-  // El ESTADO vive en el componente PADRE porque:
-  // 1. Varios componentes hijos necesitan acceder a los mismos datos
-  // 2. El padre es quien coordina la comunicación entre hermanos
+  const router = useRouter();
+  const { isLoggedIn, loading: authLoading } = useAuth();
+  const {
+    chats,
+    currentChatId,
+    messages,
+    loading,
+    loadChats,
+    createChat,
+    loadMessages,
+    sendMessage,
+    resetChat
+  } = useChat();
 
-  // Estado 1: Almacena todos los mensajes del chat
-  const [messages, setMessages] = useState<{text: string, sender: 'user' | 'bot'}[]>([]);
-
-  // Estado 2: Indica si el bot está escribiendo
-  const [isTyping, setIsTyping] = useState<boolean>(false);
-
-  // Estado 3: Controla si el sidebar está abierto o cerrado
+  // Estado 2: Controla si el sidebar está abierto o cerrado
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
-  // ==================== DATOS ESTÁTICOS ====================
-  // Respuestas predefinidas del bot (simulación)
-  const botResponses = [
-    "Interesante perspectiva sobre ese tema...",
-    "Entiendo tu punto de vista perfectamente.",
-    "¿Podrías contarme más detalles sobre eso?",
-    "Es una buena pregunta, déjame pensar...",
-    "Fascinante. Nunca lo había visto desde ese ángulo.",
-    "Eso me recuerda a algo que leí recientemente...",
-    "¡Qué curioso! Es un tema muy complejo.",
-    "Me parece una observación muy acertada.",
-    "Entiendo. ¿Y cómo te sientes al respecto?",
-    "Es un punto muy válido el que mencionas."
-  ];
+  // Estado 3: Controla si el modal de info está abierto
+  const [infoModalOpen, setInfoModalOpen] = useState<boolean>(false);
 
-  // ==================== FUNCIONES AUXILIARES ====================
-  // Función para obtener una respuesta aleatoria del bot
-  const getRandomBotResponse = (): string => {
-    const randomIndex = Math.floor(Math.random() * botResponses.length);
-    return botResponses[randomIndex];
-  };
+  // Estado para saber si ya cargamos los chats
+  const [chatsLoaded, setChatsLoaded] = useState<boolean>(false);
 
-  // Función para agregar un mensaje al array de mensajes
-  const addMessage = (text: string, sender: 'user' | 'bot') => {
-    console.log("Mensaje agregado en Home:", text, "de:", sender);
-    // setMessages actualiza el estado agregando el nuevo mensaje
-    setMessages(prevMessages => [...prevMessages, { text, sender }]);
-  };
+  // ==================== VERIFICAR AUTENTICACIÓN ====================
+  // Ya no redirigimos automáticamente al login - permitimos modo invitado
+
+  // ==================== CARGAR CHATS AL INICIAR ====================
+  useEffect(() => {
+    const initChats = async () => {
+      if (chatsLoaded || authLoading) return;
+
+      try {
+        await loadChats();
+        setChatsLoaded(true);
+      } catch (error) {
+        console.error('Error al cargar chats:', error);
+      }
+    };
+
+    initChats();
+  }, [chatsLoaded, authLoading]);
+
+  // ==================== GESTIONAR CHAT ACTIVO ====================
+  useEffect(() => {
+    const manageActiveChat = async () => {
+      if (!chatsLoaded || loading || authLoading) return;
+
+      // Si hay un chat guardado en currentChatId, cargar sus mensajes (solo si no tiene mensajes cargados)
+      if (currentChatId && chats.length > 0 && messages.length === 0) {
+        // Verificar que el chat existe
+        const chatExists = chats.find(chat => chat.id === currentChatId);
+        if (chatExists) {
+          await loadMessages(currentChatId);
+        } else {
+          // Si el chat guardado ya no existe, cargar el primero
+          await loadMessages(chats[0].id);
+        }
+      }
+      // Si hay chats pero ninguno seleccionado, cargar el primero
+      else if (chats.length > 0 && !currentChatId && messages.length === 0) {
+        await loadMessages(chats[0].id);
+      }
+      // Si no hay chats, crear uno
+      else if (chats.length === 0 && !loading) {
+        await createChat('Nueva Conversación');
+      }
+    };
+
+    manageActiveChat();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatsLoaded]);
+
+  // Convertir mensajes del ChatContext al formato que espera MessageBox
+  const formattedMessages = messages.map(msg => ({
+    text: msg.content,
+    sender: msg.role === 'user' ? 'user' as const : 'bot' as const
+  }));
 
   // ==================== FUNCIÓN CALLBACK ====================
   /**
-   * handleSendMessage - Esta es una función CALLBACK
+   * handleSendMessage - CONECTADO A OLLAMA
    *
-   * ¿Qué es un callback?
-   * - Es una función que se pasa de PADRE a HIJO como prop
-   * - Permite que el HIJO le "avise" al PADRE cuando algo sucede
-   * - El HIJO ejecuta esta función, pero la lógica vive en el PADRE
+   * ANTES: Usaba respuestas fake (botResponses)
+   * AHORA: Envía el mensaje a Ollama (llama3.2) vía backend
    *
    * Flujo:
    * 1. Usuario escribe en InputArea (HIJO)
-   * 2. InputArea llama a handleSendMessage (función del PADRE)
-   * 3. El PADRE actualiza el estado (messages)
-   * 4. El cambio en el estado hace que MessageBox (HIJO) se actualice automáticamente
+   * 2. InputArea llama a handleSendMessage
+   * 3. Se envía a ChatContext.sendMessage()
+   * 4. ChatContext hace fetch al backend
+   * 5. Backend envía a Ollama
+   * 6. Ollama responde con llama3.2
+   * 7. Se actualiza automáticamente en MessageBox
    */
-  const handleSendMessage = (text: string) => {
-    // Agregar mensaje del usuario
-    addMessage(text, 'user');
+  const handleSendMessage = async (text: string) => {
+    if (!currentChatId) {
+      console.error('No hay chat seleccionado');
+      return;
+    }
 
-    // Activar indicador de typing
-    setIsTyping(true);
-
-    // Simular respuesta del bot después de un delay
-    setTimeout(() => {
-      setIsTyping(false); // Desactivar indicador
-      const botResponse = getRandomBotResponse();
-      addMessage(botResponse, 'bot');
-    }, 1000 + Math.random() * 1500); // Entre 1 y 2.5 segundos
+    try {
+      // Enviar mensaje a Ollama (backend hace el trabajo)
+      await sendMessage(currentChatId, text);
+    } catch (error) {
+      console.error('Error al enviar mensaje:', error);
+    }
   };
 
   // ==================== RENDERIZADO ====================
+  // Mostrar pantalla de carga mientras verifica autenticación
+  if (authLoading) {
+    return (
+      <div className="bg-black text-gray-100 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-black text-gray-100 min-h-screen flex flex-col">
         {/* ========== COMPONENTE HIJO: Sidebar ========== */}
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
+        {/* ========== COMPONENTE HIJO: InfoModal ========== */}
+        <InfoModal isOpen={infoModalOpen} onClose={() => setInfoModalOpen(false)} />
+
         {/* ========== COMPONENTE HIJO 1: Header ========== */}
         {/*
-          Header recibe la función para abrir el sidebar.
+          Header recibe la función para abrir el sidebar y el modal de info.
         */}
-        <Header onOpenSidebar={() => setSidebarOpen(true)} />
+        <Header
+          onOpenSidebar={() => setSidebarOpen(true)}
+          onOpenSettings={() => setInfoModalOpen(true)}
+        />
+
+        {/* ========== AVISO MODO INVITADO ========== */}
+        {!isLoggedIn && (
+          <div className="bg-yellow-500/10 border-b border-yellow-500/30 px-4 py-2 text-center mt-16">
+            <p className="text-yellow-500 text-sm">
+              ⚠️ <strong>Modo Invitado</strong> - Tus chats solo se guardan localmente. <Link href="/register" className="underline hover:text-yellow-400">Crea una cuenta</Link> para guardar tus conversaciones permanentemente.
+            </p>
+          </div>
+        )}
 
         <main className="flex-1 container mx-auto px-4 py-6 max-w-4xl pt-24">
             {/* ========== COMPONENTE HIJO 2: MessageBox ========== */}
             {/*
-              MessageBox recibe PROPS del padre:
-              - messages: Array de mensajes (viene del estado del padre)
-              - isTyping: Boolean que indica si el bot está escribiendo
+              MessageBox AHORA recibe mensajes REALES de Ollama:
+              - formattedMessages: Mensajes convertidos del ChatContext
+              - loading: Indica si Ollama está procesando la respuesta
 
-              ¿Qué son las PROPS?
-              - Son datos que el PADRE envía al HIJO
-              - Son de solo lectura (el hijo NO puede modificarlas)
-              - Si el padre actualiza las props, el hijo se re-renderiza automáticamente
-
-              Flujo de datos: PADRE (Home) → HIJO (MessageBox)
+              Flujo: ChatContext → formattedMessages → MessageBox
             */}
-            <MessageBox messages={messages} isTyping={isTyping} />
+            <MessageBox messages={formattedMessages} isTyping={loading} />
         </main>
 
         {/* Input fijo en la parte inferior */}
@@ -167,23 +229,20 @@ export default function Home() {
           <div className="container mx-auto px-4 py-4 max-w-4xl">
             {/* ========== COMPONENTE HIJO 3: InputArea ========== */}
             {/*
-              InputArea recibe PROPS del padre:
-              - onSendMessage: Función callback para enviar mensajes al padre
-              - isTyping: Boolean para deshabilitar el input cuando el bot escribe
+              InputArea AHORA conectado a Ollama:
+              - onSendMessage: Envía a ChatContext → Backend → Ollama
+              - loading: Se deshabilita mientras Ollama procesa
 
-              ¿Cómo funciona el callback?
-              1. Usuario escribe y presiona enviar en InputArea (HIJO)
-              2. InputArea ejecuta onSendMessage(texto)
-              3. Esto ejecuta handleSendMessage en el PADRE
-              4. El PADRE actualiza el estado (messages)
-              5. MessageBox (otro HIJO) recibe el nuevo estado automáticamente
-
-              Este patrón se llama "Levantar el estado" (Lifting State Up):
-              - El estado vive en el PADRE
-              - Los HIJOS se comunican a través del PADRE
-              - Los HIJOS nunca se comunican directamente entre sí
+              Flujo REAL:
+              1. Usuario escribe en InputArea
+              2. handleSendMessage() se ejecuta
+              3. ChatContext.sendMessage() → Backend
+              4. Backend → Ollama (llama3.2)
+              5. Ollama responde
+              6. Backend guarda en PostgreSQL
+              7. Frontend actualiza mensajes automáticamente
             */}
-            <InputArea onSendMessage={handleSendMessage} isTyping={isTyping} />
+            <InputArea onSendMessage={handleSendMessage} isTyping={loading} />
           </div>
         </div>
     </div>

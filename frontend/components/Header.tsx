@@ -102,19 +102,19 @@ const Header: React.FC<HeaderProps> = ({ onOpenSidebar, onOpenSettings }) => {
               )}
             </div>
           ) : (
-            // ===== USUARIO NO LOGUEADO =====
+            // ===== USUARIO NO LOGUEADO (MODO INVITADO) =====
             <div className="flex space-x-2 ml-2">
               <Link
                 href="/login"
                 className="px-3 py-1 text-sm bg-transparent border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-black hover:scale-110 hover:shadow-md active:scale-95 transition-all duration-200"
               >
-                Log In
+                Iniciar Sesión
               </Link>
               <Link
                 href="/register"
                 className="px-3 py-1 text-sm bg-red-500 text-black rounded hover:bg-red-600 hover:scale-110 hover:shadow-lg hover:shadow-red-500/50 active:scale-95 transition-all duration-200 animate-pulse-slow"
               >
-                Sign Up
+                Crear Usuario
               </Link>
             </div>
           )}
