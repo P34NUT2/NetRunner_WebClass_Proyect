@@ -1,0 +1,42 @@
+# Claude files
+.claude/
+CLAUDE_CONTEXT.md
+Web_Basic.txt
+*.jpeg
+
+# Text and HTML files outside frontend
+*.txt
+*.html
+
+# Ignore root gitignore only
+/.gitignore
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn.lock
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# My documents and notes
+GUIA_OLLAMA_EXPERIMENTOS.md
+
+# Next.js build output
+.next/
+frontend/.next/
