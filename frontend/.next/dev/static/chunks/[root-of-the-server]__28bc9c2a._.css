@@ -1598,7 +1598,7 @@ html, body {
   }
 }
 
-.message-fade-in {
+.message-fade-in, .animate-fadeIn {
   animation: .3s ease-in-out fadeIn;
 }
 
