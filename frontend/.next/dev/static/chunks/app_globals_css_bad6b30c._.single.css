@@ -410,16 +410,8 @@
     right: calc(var(--spacing) * 0);
   }
 
-  .right-3 {
-    right: calc(var(--spacing) * 3);
-  }
-
   .bottom-0 {
     bottom: calc(var(--spacing) * 0);
-  }
-
-  .bottom-3 {
-    bottom: calc(var(--spacing) * 3);
   }
 
   .left-0 {
@@ -1122,10 +1114,6 @@
 
   .pt-24 {
     padding-top: calc(var(--spacing) * 24);
-  }
-
-  .pr-12 {
-    padding-right: calc(var(--spacing) * 12);
   }
 
   .pb-8 {
