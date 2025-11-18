@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { FaPaperPlane } from "react-icons/fa";
 
 /**
@@ -40,6 +40,13 @@ const InputArea: React.FC<Props> = ({ onSendMessage, isTyping }) => {
    */
   const [message, setMessage] = useState("");
 
+  // ========== REF PARA EL TEXTAREA ==========
+  /**
+   * useRef nos permite mantener una referencia al elemento textarea
+   * para poder hacer focus() después de enviar el mensaje
+   */
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
     /*Con esto se interactua con el evento y pdemos atrabes de los atributos del text area y el evento hacer  resize al textarea */
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const textarea = e.target;
@@ -68,10 +75,10 @@ const InputArea: React.FC<Props> = ({ onSendMessage, isTyping }) => {
       // Limpiamos el estado LOCAL de este componente
       setMessage("");
 
-      // Reset textarea height
-      const textarea = document.getElementById("user-input") as HTMLTextAreaElement;
-      if (textarea) {
-        textarea.style.height = "auto";
+      // Reset textarea height y hacer focus automático
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+        textareaRef.current.focus(); // Focus automático después de enviar
       }
     }
   };
@@ -88,6 +95,7 @@ const InputArea: React.FC<Props> = ({ onSendMessage, isTyping }) => {
             - placeholder cambia según isTyping
           */}
           <textarea
+            ref={textareaRef}
             id="user-input"
             rows={1}
             placeholder={isTyping ? "NetRunner está escribiendo..." : "Escribe tu mensaje..."}

@@ -44,7 +44,7 @@ docker compose up -d
 # 1. Download dolphin-llama3 (~4.7GB)
 # 2. Create the netrunner model from netrunner-tiny Modelfile
 
-# Check logs to see progress
+# ⚠️ IMPORTANT: Check logs to monitor the download progress
 docker compose logs -f ollama-pull
 
 # Once you see "🎉 Setup completo! NetRunner AI está listo para usar."
