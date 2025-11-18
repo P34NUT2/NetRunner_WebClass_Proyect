@@ -36,18 +36,26 @@ cd NetRunner_WebClass_Proyect
 ### Start with Docker (Recommended)
 
 ```bash
-# Start all services (first time will download ~2GB model)
+# Start all services (first time will download ~4.7GB model)
 docker compose up -d
 
-# Wait 2-3 minutes for initial setup
+# ⏱️ IMPORTANT: Wait 3-5 minutes for initial setup
 # The ollama-pull service will automatically:
-# 1. Download dolphin-llama3 (~2GB)
+# 1. Download dolphin-llama3 (~4.7GB)
 # 2. Create the netrunner model from netrunner-tiny Modelfile
 
 # Check logs to see progress
 docker compose logs -f ollama-pull
 
-# Once you see "Setup completo! NetRunner AI está listo para usar."
+# Once you see "🎉 Setup completo! NetRunner AI está listo para usar."
+# Verify models are created:
+docker exec netrunner_ollama ollama list
+
+# You should see:
+# NAME                     ID        SIZE      MODIFIED
+# netrunner:latest         ...       4.7 GB    X minutes ago
+# dolphin-llama3:latest    ...       4.7 GB    X minutes ago
+
 # Open browser
 http://localhost:3000
 ```
@@ -58,6 +66,37 @@ http://localhost:3000
 - ✅ Frontend Next.js app
 - ✅ Ollama with netrunner model created automatically
 - ✅ pgAdmin for database management
+
+---
+
+### Manual Model Setup (If Automatic Setup Fails)
+
+If the automatic setup doesn't work, you can create the model manually:
+
+```bash
+# 1. Make sure Docker is running
+docker compose up -d
+
+# 2. Copy the Modelfile into the container
+docker cp netrunner-tiny netrunner_ollama:/netrunner-tiny
+
+# 3. Enter the Ollama container
+docker exec -it netrunner_ollama bash
+
+# 4. Inside the container, pull the base model
+ollama pull dolphin-llama3
+
+# 5. Create the netrunner model
+ollama create netrunner -f /netrunner-tiny
+
+# 6. Verify it was created
+ollama list
+
+# 7. Exit the container
+exit
+```
+
+Now your application should work correctly at http://localhost:3000
 
 ---
 
