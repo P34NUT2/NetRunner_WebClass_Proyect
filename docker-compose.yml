@@ -51,8 +51,8 @@ services:
     volumes:
       # Guardar modelos descargados (2-10GB)
       - ollama_data:/root/.ollama
-      # Montar el Modelfile minimal para crear modelo personalizado
-      - ./netrunner-minimal:/netrunner-minimal:ro
+      # Montar el Modelfile tiny para crear modelo personalizado
+      - ./netrunner-tiny:/netrunner-tiny:ro
     networks:
       - netrunner_network
     environment:
@@ -86,7 +86,7 @@ services:
       echo '✅ dolphin-llama3 listo!';
       echo '';
       echo '🧠 [2/2] Creando modelo netrunner (CTF personalizado)...';
-      docker exec netrunner_ollama ollama create netrunner -f /netrunner-minimal;
+      docker exec netrunner_ollama ollama create netrunner -f /netrunner-tiny;
       echo '✅ Modelo netrunner creado!';
       echo '';
       echo '🎉 Setup completo! NetRunner AI está listo para usar.';
