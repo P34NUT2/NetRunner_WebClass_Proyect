@@ -25,21 +25,39 @@ NetRunner AI is an intelligent assistant specialized in **Capture The Flag (CTF)
 
 ## 🚀 Quick Start
 
+### Clone the Repository
+
 ```bash
-# 1. Start Docker services
-cd /home/antonio/proyectos/NetRunner
+# Clone the project
+git clone https://github.com/P34NUT2/NetRunner_WebClass_Proyect.git
+cd NetRunner_WebClass_Proyect
+```
+
+### Start with Docker (Recommended)
+
+```bash
+# Start all services (first time will download ~2GB model)
 docker compose up -d
 
-# 2. Backend starts automatically in Docker
-# Frontend starts automatically in Docker
+# Wait 2-3 minutes for initial setup
+# The ollama-pull service will automatically:
+# 1. Download dolphin-llama3 (~2GB)
+# 2. Create the netrunner model from netrunner-tiny Modelfile
 
-# 3. Open browser
+# Check logs to see progress
+docker compose logs -f ollama-pull
+
+# Once you see "Setup completo! NetRunner AI está listo para usar."
+# Open browser
 http://localhost:3000
 ```
 
-**That's it!** The model will be automatically downloaded and created on first run.
-
-For detailed instructions, see: [COMO_INICIAR_NETRUNNER.txt](COMO_INICIAR_NETRUNNER.txt)
+**That's it!** Everything is automated:
+- ✅ PostgreSQL database with migrations
+- ✅ Backend API server
+- ✅ Frontend Next.js app
+- ✅ Ollama with netrunner model created automatically
+- ✅ pgAdmin for database management
 
 ---
 
