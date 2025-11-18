@@ -36,7 +36,15 @@ cd NetRunner_WebClass_Proyect
 ### Start with Docker (Recommended)
 
 ```bash
-# Start all services (first time will download ~4.7GB model)
+# ⚠️ IMPORTANT: Build the Docker images first
+docker compose build
+
+# This will:
+# - Build frontend image (~2 minutes)
+# - Build backend image (~1 minute)
+# - Total time: ~3-5 minutes on first build
+
+# Then start all services (first time will download ~4.7GB model)
 docker compose up -d
 
 # ⏱️ IMPORTANT: Wait 3-5 minutes for initial setup
