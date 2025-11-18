@@ -64,7 +64,18 @@ const InputArea: React.FC<Props> = ({ onSendMessage, isTyping }) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault(); // Evitar el salto de línea
-      handleSubmit(e as any); // Enviar el mensaje
+
+      // Enviar el mensaje si hay texto y el bot no está escribiendo
+      if (message.trim() && !isTyping) {
+        onSendMessage(message.trim());
+        setMessage("");
+
+        // Reset textarea height y hacer focus automático
+        if (textareaRef.current) {
+          textareaRef.current.style.height = "auto";
+          textareaRef.current.focus();
+        }
+      }
     }
   };
 
