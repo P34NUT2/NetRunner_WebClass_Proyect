@@ -17,10 +17,11 @@ npm-debug.log
 yarn-error.log
 yarn.lock
 
-# Environment variables
+# Environment variables (but keep .env.example)
 .env
 .env.local
 .env.production
+!.env.example
 
 # Logs
 logs/
@@ -43,13 +44,6 @@ GUIA_OLLAMA.md
 *.md
 !README.md
 !DOCKER_INSTRUCTIONS.md
-
-# Modelos de Ollama (ignorar todos excepto netrunner-tiny)
-netrunner-light
-netrunner-medium
-netrunner-minimal
-netrunner-model
-netrunner-model-personalizado
 
 # Next.js build output
 .next/

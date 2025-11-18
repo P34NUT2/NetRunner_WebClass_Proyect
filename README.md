@@ -1,5 +1,5 @@
 # NetRunner AI
-An uncensored AI assistant specifically trained with CTF writeups and pentesting techniques to help cybersecurity professionals and CTF participants solve challenges.
+An uncensored AI assistant powered by custom prompts with CTF and pentesting knowledge to help cybersecurity professionals and CTF participants solve challenges.
 
 <div align="left">
   <img height="300" src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExaGV0M3pobTlmM2JtazRzMndneXdkOWp1YjhkYjBqdzZsMGZqaDFjeSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3ohzdYt5HYinIx13ji/giphy.gif"  />
@@ -7,16 +7,15 @@ An uncensored AI assistant specifically trained with CTF writeups and pentesting
 
 ## 🎯 Overview
 
-NetRunner AI is an intelligent assistant specialized in **Capture The Flag (CTF)** competitions and **ethical pentesting**. Built with real techniques and experiences from actual cybersecurity challenges, it provides expert guidance for reconnaissance, exploitation, and privilege escalation.
+NetRunner AI is an intelligent assistant specialized in **Capture The Flag (CTF)** competitions and **ethical pentesting**. Using custom system prompts with cybersecurity knowledge, it provides guidance for reconnaissance, exploitation, and privilege escalation techniques.
 
 **Version:** 1.0 - Modelo Personalizado
 **Last Updated:** November 18, 2025
 **Status:** Fully functional and dockerized
 
 ### Key Features
-- ✅ Custom AI model `netrunner` based on dolphin-llama3
-- ✅ Knowledge of ethical hacking techniques (XSS, SQLi, SSTI, SSRF, etc.)
-- ✅ Real CTF writeups (HackTheBox, Sunshine CTF)
+- ✅ Custom system prompts with CTF knowledge based on dolphin-llama3
+- ✅ Prompts include ethical hacking techniques (XSS, SQLi, SSTI, SSRF, etc.)
 - ✅ Dual mode: Authenticated (PostgreSQL) + Guest (localStorage)
 - ✅ Modern web interface with Next.js + TailwindCSS
 - ✅ 100% local - your data never leaves your machine
@@ -134,7 +133,7 @@ NetRunner/
 ### AI & Machine Learning
 - **Ollama** - Local LLM runtime
 - **dolphin-llama3** - Base uncensored model
-- **Custom Modelfiles** - Specialized CTF knowledge
+- **Custom System Prompts** - CTF and pentesting context via Modelfiles
 
 ### Infrastructure
 - **Docker Compose** - Multi-container orchestration
@@ -143,9 +142,9 @@ NetRunner/
 
 ---
 
-## 🧠 Included Techniques
+## 🧠 Techniques in System Prompts
 
-The `netrunner` model includes knowledge of:
+The custom Modelfiles include context about:
 
 ### Web Exploitation
 - **XSS** (Cross-Site Scripting) - fetch(), cookies, DOM manipulation
@@ -174,20 +173,6 @@ The `netrunner` model includes knowledge of:
 
 ---
 
-## 🏆 CTF Writeups Included
-
-The model has been trained with real writeups:
-
-1. **Cap (HackTheBox)**
-   - Technique: IDOR + Linux capabilities
-   - Path: Enumeration → Wireshark PCAP analysis → Privesc with setuid
-
-2. **WebHook (Sunshine CTF 2025)**
-   - Technique: DNS Rebinding + SSRF bypass
-   - Path: Reconnaissance → localhost filter bypass → Flag extraction
-
----
-
 ## 🌐 Ports & Services
 
 | Service | Port | URL | Description |
@@ -213,11 +198,38 @@ The model has been trained with real writeups:
 
 ---
 
-## 🎨 Features
+### 🎓 University Project Requirements
+This project fulfills all requirements for the Web Development final project:
+
+#### Frontend ✅
+- ✅ **Next.js 16** project with React 19
+- ✅ **API connection** to backend via REST endpoints
+- ✅ **Independent Docker container** (`netrunner_frontend`)
+- ✅ **Fully responsive** design with TailwindCSS
+
+#### Backend ✅
+- ✅ **Node.js + Express 5** backend
+- ✅ **Prisma ORM** for database communication
+- ✅ **bcrypt password hashing** on the backend side
+- ✅ **Independent Docker container** (`netrunner_backend`)
+
+#### Database ✅
+- ✅ **PostgreSQL 15** with complete schema
+- ✅ **Test data** ready (users, chats, messages)
+- ✅ **Independent Docker container** (`postgres_db`)
+- ✅ Accessible via pgAdmin on port 8080
+
+#### Additional Features
+- ✅ **3 additional Docker services**: pgAdmin, Ollama, ollama-pull
+- ✅ **JWT authentication** with 7-day expiration
+- ✅ **Multiple chat support** with history
+- ✅ **Guest mode** (no authentication required)
+- ✅ **AI integration** via Ollama with custom prompts
 
 ### Authentication & Users
 - ✅ User registration with validation
 - ✅ JWT-based login (7-day expiration)
+- ✅ Password hashing with bcrypt
 - ✅ User profile management (editable real name)
 - ✅ Session persistence (localStorage)
 - ✅ Guest mode (no authentication required)
@@ -225,7 +237,7 @@ The model has been trained with real writeups:
 ### Chat & Messaging
 - ✅ Multiple independent chats
 - ✅ Automatic chat creation on login
-- ✅ Real-time messages with Ollama
+- ✅ Real-time messages with Ollama AI
 - ✅ "Typing..." indicator
 - ✅ Auto-generated chat titles (first 47 characters)
 - ✅ Persistent storage (PostgreSQL + localStorage)
@@ -243,35 +255,64 @@ The model has been trained with real writeups:
 ### UI/UX
 - ✅ Dark mode theme (Black + Red + Gray)
 - ✅ Smooth animations (hover, active, pulse)
-- ✅ Responsive design
+- ✅ Responsive design (mobile, tablet, desktop)
 - ✅ Modern minimalist interface
 
 ---
 
 ## 🔐 Architecture
 
+### Dual Mode System
+
+The application implements **two separate logic flows** to support both authenticated and guest users:
+
+#### Why Two Separate Logics?
+
+1. **Authenticated Mode**: Users with accounts get full persistence via PostgreSQL
+2. **Guest Mode**: No signup required - data stored in browser localStorage for quick access
+
+This dual approach provides flexibility while maintaining security for registered users.
+
 ### Authentication Flow
 ```
 User → Frontend → Backend → JWT Verification → PostgreSQL
 ```
 
-### Chat Flow (Authenticated)
+### Chat Flow (Authenticated Users)
 ```
 User Input → ChatContext → Backend API → PostgreSQL (save)
           ↓
-      Ollama Service → Model Inference → Response
+      Backend → Ollama Service (port 11434) → Model Inference
           ↓
-      PostgreSQL (save) → Backend → Frontend → UI Update
+      Backend → PostgreSQL (save) → Response → Frontend → UI Update
 ```
 
-### Chat Flow (Guest Mode)
+**Flow Details:**
+1. User sends message from frontend
+2. ChatContext calls backend API endpoint (`/api/chat/:id/messages`)
+3. Backend saves user message to PostgreSQL
+4. Backend calls Ollama service internally
+5. Backend saves AI response to PostgreSQL
+6. Backend returns both messages to frontend
+7. Frontend updates UI
+
+### Chat Flow (Guest Mode - No Authentication)
 ```
 User Input → ChatContext → localStorage (save)
           ↓
-      Direct Ollama Call (port 11434) → Response
+      Direct Ollama Call (port 11434) → Model Inference
           ↓
       localStorage (save) → UI Update
 ```
+
+**Flow Details:**
+1. User sends message from frontend
+2. ChatContext saves message directly to localStorage
+3. ChatContext calls Ollama API directly (no backend)
+4. ChatContext saves AI response to localStorage
+5. Frontend updates UI
+
+**Key Difference**: Guest mode bypasses the backend entirely for chat operations, calling Ollama directly from the browser.
 
 ---
 
@@ -290,53 +331,42 @@ All services are connected via `netrunner_network` bridge network.
 
 ---
 
-## 📚 Documentation
-
-| File | Description |
-|------|-------------|
-| [COMO_INICIAR_NETRUNNER.txt](COMO_INICIAR_NETRUNNER.txt) | Complete startup guide |
-| [SESION_ACTUAL_11NOV2025.txt](SESION_ACTUAL_11NOV2025.txt) | Current status and next steps |
-| [ESTADO_ACTUAL_PROYECTO.txt](ESTADO_ACTUAL_PROYECTO.txt) | Full project state |
-| [EXPLICACION_TOKENS_Y_CONTEXTO.md](EXPLICACION_TOKENS_Y_CONTEXTO.md) | How context works |
-| [COMO_FUNCIONA_LA_CONEXION.txt](COMO_FUNCIONA_LA_CONEXION.txt) | Technical architecture |
-
----
-
-## 🛠️ Development
+## 🛠️ Running the Project
 
 ### Prerequisites
-- Docker & Docker Compose
-- Node.js 20+
-- npm or yarn
+- **With Docker**: Docker & Docker Compose
+- **Without Docker**: Node.js 20+, PostgreSQL, Ollama
 
-### Local Development (Without Docker)
+### Without Docker (Local Development)
 
 ```bash
-# 1. Start PostgreSQL (Docker)
-docker compose up postgres -d
+# 1. Start PostgreSQL (you need PostgreSQL installed)
+# Create database 'netrunner' with user 'webdev'
 
-# 2. Start Ollama (Docker)
-docker compose up ollama ollama-pull -d
+# 2. Start Ollama (you need Ollama installed)
+ollama serve
 
-# 3. Install backend dependencies
+# 3. Create Ollama model
+ollama pull dolphin-llama3
+ollama create netrunner -f ./netrunner-tiny
+
+# 4. Setup Backend
 cd backend
+cp .env.example .env
 npm install
-
-# 4. Run database migrations
 npx prisma migrate dev
+npm start
 
-# 5. Start backend
-npm run dev
-
-# 6. Install frontend dependencies (new terminal)
+# 5. Setup Frontend (new terminal)
 cd frontend
 npm install
-
-# 7. Start frontend
 npm run dev
+
+# 6. Open browser
+http://localhost:3000
 ```
 
-### Production (Docker)
+### With Docker (Recommended)
 
 ```bash
 # Start all services
@@ -351,6 +381,8 @@ docker compose down
 # Rebuild after changes
 docker compose up -d --build
 ```
+
+> 📘 **To change AI context/prompts**: See [DOCKER_INSTRUCTIONS.md](DOCKER_INSTRUCTIONS.md) for how to switch between different Modelfiles
 
 ---
 
@@ -372,19 +404,31 @@ docker compose up -d --build
 
 ---
 
-## 🔧 Available Models
+## 🔧 Available System Prompts (Prompt Engineering)
 
-The project includes multiple model configurations:
+The AI customization uses **prompt engineering** via Ollama Modelfiles. These are text files that configure the system prompt sent to the base model (`dolphin-llama3`).
 
-| Model | Size | Context | Use Case | Status |
-|-------|------|---------|----------|--------|
-| **netrunner-tiny** | 435 B | 256 tokens | Fastest, minimal context | ✅ **ACTIVE** |
-| netrunner-minimal | 1.1 KB | 512 tokens | Quick responses | Available |
-| netrunner-light | 5.1 KB | 2048 tokens | Essential techniques | Available |
-| netrunner-medium | 3.2 KB | 4096 tokens | Balanced | Available |
-| netrunner-custom | 31 KB | 8192 tokens | Full knowledge base | Available |
+> ℹ️ **Note**: This is NOT model training or fine-tuning. It's prompt engineering - providing context to the model at runtime.
 
-To change the model, edit `docker-compose.yml` lines 55 and 89.
+### Prompt Development
+
+All prompts were **manually written by Antonio Villafaña** based on:
+- ✍️ Personal CTF experiences and techniques
+- 📝 Real writeups from challenges solved (HackTheBox, Sunshine CTF, etc.)
+- 🛠️ Tools and methodologies learned through practice
+- 🔐 Ethical hacking knowledge accumulated over time
+
+The project includes 5 different Modelfile configurations:
+
+| Modelfile | Size | Context | Prompting Strategy | Status |
+|-----------|------|---------|-------------------|--------|
+| **netrunner-tiny** | 435 B | 256 tokens | Minimal CTF context | ✅ **DEFAULT** |
+| netrunner-minimal | 1.1 KB | 512 tokens | Basic techniques in prompt | Available |
+| netrunner-light | 5.1 KB | 2048 tokens | Essential techniques in prompt | Available |
+| netrunner-medium | 3.2 KB | 4096 tokens | Balanced technique list | Available |
+| netrunner-model-personalizado | 31 KB | 8192 tokens | Full technique library from personal writeups | Available |
+
+**To change the prompt configuration**: See [DOCKER_INSTRUCTIONS.md](DOCKER_INSTRUCTIONS.md) for step-by-step instructions.
 
 ---
 
@@ -424,3 +468,21 @@ For more issues, see: [COMO_INICIAR_NETRUNNER.txt](COMO_INICIAR_NETRUNNER.txt) �
 ## 👤 Author
 
 **José Antonio Villafaña Montes de Oca**
+
+---
+
+## 📚 Project Information
+
+**Type**: Web Development Final Project
+**Institution**: Universidad (Desarrollo Web)
+**Presentation Date**: November 24, 2025
+**Status**: ✅ All requirements fulfilled
+
+### Requirements Met:
+- ✅ Next.js frontend with API connection
+- ✅ Backend in Node.js with ORM (Prisma)
+- ✅ Password hashing with bcrypt
+- ✅ PostgreSQL database with test data
+- ✅ Each component in independent Docker containers
+- ✅ All services interconnected and working
+- ✅ Frontend affects backend, backend affects database
