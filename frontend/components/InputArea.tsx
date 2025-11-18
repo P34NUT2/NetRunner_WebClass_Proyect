@@ -47,13 +47,25 @@ const InputArea: React.FC<Props> = ({ onSendMessage, isTyping }) => {
    */
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    /*Con esto se interactua con el evento y pdemos atrabes de los atributos del text area y el evento hacer  resize al textarea */
+  /*Con esto se interactua con el evento y pdemos atrabes de los atributos del text area y el evento hacer  resize al textarea */
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const textarea = e.target;
     setMessage(textarea.value);
 
     textarea.style.height = "auto";
     textarea.style.height = textarea.scrollHeight + "px";
+  };
+
+  // ========== MANEJAR TECLA ENTER ==========
+  /**
+   * Cuando el usuario presiona Enter (sin Shift), enviar el mensaje
+   * Shift+Enter permite hacer saltos de línea
+   */
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault(); // Evitar el salto de línea
+      handleSubmit(e as any); // Enviar el mensaje
+    }
   };
 
   // ========== FUNCIÓN QUE USA EL CALLBACK DEL PADRE ==========
@@ -101,6 +113,7 @@ const InputArea: React.FC<Props> = ({ onSendMessage, isTyping }) => {
             placeholder={isTyping ? "NetRunner está escribiendo..." : "Escribe tu mensaje..."}
             value={message}
             onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
             disabled={isTyping}
             className={`w-full border rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none textarea-scrollbar ${
               isTyping
